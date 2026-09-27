@@ -11,6 +11,29 @@ class MapService {
     this.currentCity = 'dar-es-salaam';
     this.center = [-6.816064, 39.280358];
     this.zoom = 13;
+    // Tile providers — tried in order. OSM first because {s}.basemaps.cartocdn.com
+    // is blocked on some Tanzanian ISPs/networks (grid with no streets = tiles blocked).
+    // OSM tile usage policy: https://operations.osmfoundation.org/policies/tiles/
+    this.tileProviders = [
+      {
+        name: 'osm',
+        url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+        options: { attribution: '&copy; OpenStreetMap contributors', subdomains: 'abc', maxZoom: 19 }
+      },
+      {
+        name: 'carto',
+        url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+        options: { attribution: '&copy; OpenStreetMap contributors &copy; CARTO', subdomains: 'abcd', maxZoom: 19 }
+      },
+      {
+        name: 'opentopo',
+        url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+        options: { attribution: '&copy; OpenStreetMap contributors &copy; OpenTopoMap', subdomains: 'abc', maxZoom: 17 }
+      }
+    ];
+    this.tileErrorCounts = {};
+    this.activeTileLayer = null;
+    this.activeProviderIndex = 0;
   }
 
   init(center = [-6.816064, 39.280358], zoom = 13) {
@@ -29,22 +52,9 @@ class MapService {
       zoomControl: false
     }).setView(this.center, this.zoom);
 
-    // Primary: CARTO Voyager (pretty). Fallback: standard OSM if CARTO is blocked.
-    const carto = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-      subdomains: 'abcd',
-      maxZoom: 19
-    });
-    carto.on('tileerror', () => {
-      if (!this._osmFallbackAdded) {
-        this._osmFallbackAdded = true;
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; OpenStreetMap contributors',
-          maxZoom: 19
-        }).addTo(this.map);
-      }
-    });
-    carto.addTo(this.map);
+    // Auto-cycling tile providers: if one host is blocked (grid with no streets),
+    // switch to the next after 4 failed tiles.
+    this._applyTileProvider(0);
 
     L.control.zoom({ position: 'topright' }).addTo(this.map);
 
@@ -54,6 +64,29 @@ class MapService {
     return this.map;
   }
 
+  _applyTileProvider(index) {
+    const provider = this.tileProviders[index];
+    if (!provider) {
+      console.error('All tile providers failed. Check internet connection.');
+      return;
+    }
+    this.activeProviderIndex = index;
+    this.tileErrorCounts[provider.name] = 0;
+    if (this.activeTileLayer && this.map) this.map.removeLayer(this.activeTileLayer);
+    const layer = L.tileLayer(provider.url, provider.options);
+    layer.on('tileerror', () => {
+      this.tileErrorCounts[provider.name] = (this.tileErrorCounts[provider.name] || 0) + 1;
+      console.warn(`Tiles failing on ${provider.name} (${this.tileErrorCounts[provider.name]} errors)`);
+      if (this.tileErrorCounts[provider.name] >= 4 && this.activeProviderIndex === index) {
+        console.warn(`Switching tiles from ${provider.name} to next provider…`);
+        this._applyTileProvider(index + 1);
+      }
+    });
+    layer.on('load', () => console.log(`Tiles OK via ${provider.name}`));
+    this.activeTileLayer = layer;
+    layer.addTo(this.map);
+  }
+
   // Call every time the map container becomes visible.
   refresh() {
     if (!this.map) return;
@@ -61,6 +94,14 @@ class MapService {
     [50, 200, 600].forEach(ms => setTimeout(() => {
       try { this.map.invalidateSize(); } catch (e) { /* ignore */ }
     }, ms));
+  }
+
+  // Manual switch button can call this. Exposed globally via app.js.
+  cycleTileProvider() {
+    const next = (this.activeProviderIndex + 1) % this.tileProviders.length;
+    console.log(`Manual tile switch → ${this.tileProviders[next].name}`);
+    this._applyTileProvider(next);
+    return this.tileProviders[next].name;
   }
 
   setCity(cityObj) {

@@ -184,6 +184,16 @@ function resetMapView() {
   }
 }
 
+// Manual tile-provider switch (map style button 🔃 on the map).
+function switchMapTiles() {
+  if (!mapService || !mapService.map) {
+    alert("Ramani bado inapakiwa — subiri sekunde chache kisha jaribu tena.");
+    return;
+  }
+  const name = mapService.cycleTileProvider();
+  console.log("Tile provider:", name);
+}
+
 function selectQuickDestination(name, coordinates) {
   userDestination = { name, coordinates };
   document.getElementById('destInput').value = name;
