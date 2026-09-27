@@ -23,6 +23,13 @@ let activeSimulationTimer = null;
 let savedTrips = [];
 
 // Initialize PWA Service Worker & App State
+// Wait for Leaflet (CDN or local fallback) before initialising the map.
+function waitForLeaflet(triesLeft, done) {
+  if (typeof L !== 'undefined') return done();
+  if (triesLeft <= 0) return done();
+  setTimeout(() => waitForLeaflet(triesLeft - 1, done), 100);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW error:', err));
@@ -30,12 +37,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
   loadSavedTrips();
 
-  // Initialize Map Service
-  mapService = new MapService('map');
-  mapService.init(currentCity.center, currentCity.zoom);
+  // Initialize Map Service (after Leaflet is available)
+  waitForLeaflet(50, () => {
+    mapService = new MapService('map');
+    mapService.init(currentCity.center, currentCity.zoom);
 
-  // Set default origin marker
-  mapService.updateUserLocation(userOrigin.coordinates, "Mbezi Mwisho (Wewe Upo Hapa)");
+    // Set default origin marker
+    mapService.updateUserLocation(userOrigin.coordinates, "Mbezi Mwisho (Wewe Upo Hapa)");
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('mode') === 'app' || urlParams.get('navigate') === 'true') {
+      showAppView();
+    }
+  });
 
   // Setup search autocomplete
   setupAutocomplete('originInput', 'originDropdown', (item) => {
@@ -57,11 +71,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (cityBtn) {
     cityBtn.addEventListener('click', openCitySelector);
   }
-
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('mode') === 'app' || urlParams.get('navigate') === 'true') {
-    showAppView();
-  }
 });
 
 // ---------------------------------------------------------------------------
@@ -82,9 +91,8 @@ function showAppView() {
   if (document.getElementById('tabMapBtn')) document.getElementById('tabMapBtn').classList.add('active');
   if (document.getElementById('tabKariakooBtn')) document.getElementById('tabKariakooBtn').classList.remove('active');
 
-  if (mapService && mapService.map) {
-    setTimeout(() => { mapService.map.invalidateSize(); }, 150);
-  }
+  // The map container had zero size while hidden — force Leaflet to re-measure.
+  if (mapService) mapService.refresh();
 }
 
 function startSearchFromLanding() {
@@ -144,6 +152,11 @@ function setAppLanguage(lang) {
 }
 
 function useCurrentGpsLocation() {
+  if (!mapService || !mapService.map) {
+    alert("Ramani bado inapakiwa — subiri sekunde chache kisha jaribu tena.");
+    if (mapService) mapService.refresh();
+    return;
+  }
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -164,8 +177,10 @@ function useCurrentGpsLocation() {
 }
 
 function resetMapView() {
-  if (mapService && currentCity) {
+  if (mapService && mapService.map && currentCity) {
     mapService.setCity(currentCity);
+  } else if (mapService) {
+    mapService.refresh();
   }
 }
 

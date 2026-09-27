@@ -14,23 +14,53 @@ class MapService {
   }
 
   init(center = [-6.816064, 39.280358], zoom = 13) {
+    if (typeof L === 'undefined') {
+      console.error('Leaflet (L) failed to load — check internet / unpkg CDN.');
+      const el = document.getElementById(this.containerId);
+      if (el) el.innerHTML = '<div style="padding:24px;font-size:14px">Ramani haijapakiwa: ukurasa unahitaji intaneti kupakua Leaflet. Angalia muunganisho kisha refresh.</div>';
+      return null;
+    }
     this.center = center;
     this.zoom = zoom;
 
+    // If the workspace is hidden (landing page visible), Leaflet measures 0x0.
+    // Initialise anyway, then fix size when the workspace is shown (see refresh()).
     this.map = L.map(this.containerId, {
       zoomControl: false
     }).setView(this.center, this.zoom);
 
-    // Modern OpenStreetMap tiles / CartoDB Voyager style
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    // Primary: CARTO Voyager (pretty). Fallback: standard OSM if CARTO is blocked.
+    const carto = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
       subdomains: 'abcd',
       maxZoom: 19
-    }).addTo(this.map);
+    });
+    carto.on('tileerror', () => {
+      if (!this._osmFallbackAdded) {
+        this._osmFallbackAdded = true;
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap contributors',
+          maxZoom: 19
+        }).addTo(this.map);
+      }
+    });
+    carto.addTo(this.map);
 
     L.control.zoom({ position: 'topright' }).addTo(this.map);
 
+    // Keep tiles correct on window resize / orientation change.
+    window.addEventListener('resize', () => this.refresh());
+
     return this.map;
+  }
+
+  // Call every time the map container becomes visible.
+  refresh() {
+    if (!this.map) return;
+    // Multiple passes: CSS transition + flex layout need a beat to settle.
+    [50, 200, 600].forEach(ms => setTimeout(() => {
+      try { this.map.invalidateSize(); } catch (e) { /* ignore */ }
+    }, ms));
   }
 
   setCity(cityObj) {
@@ -40,7 +70,7 @@ class MapService {
   }
 
   updateUserLocation(latLng, title = "Upo Hapa") {
-    if (!this.map) return;
+    if (!this.map || typeof L === 'undefined') return;
 
     const userIcon = L.divIcon({
       className: 'user-gps-marker-container',
