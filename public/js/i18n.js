@@ -93,7 +93,7 @@ const i18n = {
       searchOriginPrompt: 'Where are you now?',
       useCurrentLocation: '📍 Use current location',
       inputCustomLocation: '✏️ Enter custom location',
-      ctaNifikishe: 'NIFIKISHE (NAVIGATE)',
+      ctaNifikishe: 'NIFIKISHE',
       availableRoutesTitle: 'AVAILABLE JOURNEY OPTIONS',
       directDaladala: 'Direct Daladala',
       fastest: 'Fastest',

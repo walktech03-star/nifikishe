@@ -83,6 +83,21 @@ notes.push('data-i18n keys checked: ' + i18nKeys.size);
 const generated = ['route-card-body', 'route-title', 'route-metric-pill', 'route-time-box', 'item-title', 'item-sub', 'vehicle-preview-img', 'autocomplete-item'];
 generated.filter(c => !css.includes('.' + c)).forEach(c => problems.push('CSS rule missing for JS-generated class: ' + c));
 
+// --- 5b. Brand-name guard: NIFIKISHE must never be translated ---------------
+try {
+  const swBlockB = i18nSrc.slice(i18nSrc.indexOf('sw: {'), i18nSrc.indexOf('en: {'));
+  const enBlockB = i18nSrc.slice(i18nSrc.indexOf('en: {'));
+  const brandOk = s => /appName:\s*'NIFIKISHE'/.test(s) && /ctaNifikishe:\s*'NIFIKISHE'/.test(s);
+  if (!brandOk(swBlockB)) problems.push('brand guard: SW appName/ctaNifikishe must be exactly NIFIKISHE');
+  if (!brandOk(enBlockB)) problems.push('brand guard: EN appName/ctaNifikishe must be exactly NIFIKISHE');
+  const manifest = JSON.parse(read(path.join(pub, 'manifest.json')));
+  if (manifest.short_name !== 'NIFIKISHE') problems.push('brand guard: manifest short_name must be NIFIKISHE');
+  if (!String(manifest.name).startsWith('NIFIKISHE')) problems.push('brand guard: manifest name must start with NIFIKISHE');
+  notes.push('brand guard: NIFIKISHE untranslated in SW/EN/manifest');
+} catch (err) {
+  problems.push('brand guard check failed: ' + err.message);
+}
+
 // --- 6. Optional live server checks ----------------------------------------
 const live = process.argv.includes('--live');
 if (live) {
