@@ -7,6 +7,7 @@ const ASSETS = [
   '/js/app.js',
   '/js/i18n.js',
   '/js/map-service.js',
+  '/js/admin-panel.js',
   '/js/vendor/leaflet.js',
   '/js/vendor/leaflet.css',
   '/images/daladala.svg',

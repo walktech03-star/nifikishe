@@ -36,7 +36,7 @@ fs.readdirSync(dataDir).filter(f => f.endsWith('.json')).forEach(f => {
 });
 
 // --- 2. JavaScript syntax ---------------------------------------------------
-['public/js/app.js', 'public/js/i18n.js', 'public/js/map-service.js', 'public/sw.js', 'server.js']
+['public/js/app.js', 'public/js/i18n.js', 'public/js/map-service.js', 'public/js/admin-panel.js', 'public/sw.js', 'server.js']
   .forEach(rel => {
     try {
       execFileSync(process.execPath, ['--check', path.join(root, rel)], { stdio: 'pipe' });
@@ -48,7 +48,7 @@ fs.readdirSync(dataDir).filter(f => f.endsWith('.json')).forEach(f => {
 
 // --- 3. HTML <-> JS wiring --------------------------------------------------
 const html = read(path.join(pub, 'index.html'));
-const js = ['app.js', 'i18n.js', 'map-service.js']
+const js = ['app.js', 'i18n.js', 'map-service.js', 'admin-panel.js']
   .map(f => read(path.join(pub, 'js', f))).join('\n');
 const css = read(path.join(pub, 'css', 'style.css'));
 
@@ -65,6 +65,8 @@ for (const m of js.matchAll(/(?:^|\s)function\s+([A-Za-z_$][\w$]*)|window\.([A-Z
 
 const ids = new Set([...html.matchAll(/id="([^"]+)"/g)].map(x => x[1]));
 [...new Set([...js.matchAll(/getElementById\(\s*'([^']+)'\s*\)/g)].map(x => x[1]))]
+  // adminKeyInput is rendered at runtime inside the admin modal by admin-panel.js
+  .filter(id => id !== 'adminKeyInput')
   .filter(id => !ids.has(id))
   .forEach(id => problems.push('getElementById target missing from HTML: ' + id));
 

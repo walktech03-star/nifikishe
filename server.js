@@ -437,23 +437,168 @@ app.get('/api/admin/overview', (req, res) => {
 });
 
 // Admin management APIs
-app.post('/api/admin/routes', (req, res) => {
+const ADMIN_KEY = process.env.ADMIN_KEY || '';
+
+// Simple shared-key guard for write endpoints. When ADMIN_KEY is unset (local
+// dev), writes are allowed. In production set ADMIN_KEY and send it as
+// x-admin-key header from the admin panel.
+function requireAdmin(req, res, next) {
+  if (!ADMIN_KEY) return next();
+  if (req.headers['x-admin-key'] === ADMIN_KEY) return next();
+  return res.status(401).json({ success: false, error: 'Huna ruhusa (admin key missing)' });
+}
+
+function todayStr() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function parseCoordPair(str) {
+  // Accepts "-6.7725, 39.1128" → [-6.7725, 39.1128]
+  if (!str) return null;
+  const parts = String(str).split(',').map(s => parseFloat(s.trim()));
+  if (parts.length !== 2 || parts.some(n => Number.isNaN(n))) return null;
+  if (parts[0] < -90 || parts[0] > 90 || parts[1] < -180 || parts[1] > 180) return null;
+  return parts;
+}
+
+function parseCoordPath(text) {
+  // One "lat,lng" per line → [[lat,lng], ...]
+  if (!text) return null;
+  const lines = String(text).split('\n').map(l => l.trim()).filter(Boolean);
+  const coords = lines.map(parseCoordPair);
+  if (coords.length < 2 || coords.some(c => !c)) return null;
+  return coords;
+}
+
+app.post('/api/admin/routes', requireAdmin, (req, res) => {
+  const { name, startArea, destinationArea, transportType, routeNumber, routeSign,
+    conductorAsk, fareEstimatedTsh, estimatedTimeMinutes, distanceKm, cityId,
+    operatingHours, description, coordPath } = req.body || {};
+  if (!name || !startArea || !destinationArea) {
+    return res.status(400).json({ success: false, error: 'Jina, eneo la kuanzia na eneo la mwisho vinahitajika' });
+  }
+  const coordinates = parseCoordPath(coordPath);
+  if (!coordinates) {
+    return res.status(400).json({ success: false, error: 'Weka njia (coordPath): angalau mistari 2 ya "lat,lng"' });
+  }
   const routes = loadData('routes.json') || [];
-  const newRoute = { id: `route_${Date.now()}`, verificationStatus: 'verified', lastVerified: new Date().toISOString().split('T')[0], ...req.body };
+  const newRoute = {
+    id: `route_${Date.now()}`,
+    name, startArea, destinationArea,
+    swName: name,
+    cityId: cityId || 'dar-es-salaam',
+    transportType: transportType || 'daladala',
+    routeNumber: routeNumber || '',
+    direction: 'inbound',
+    routeSign: routeSign || `${String(startArea).toUpperCase()} - ${String(destinationArea).toUpperCase()}`,
+    routeSignColor: '#16a34a',
+    routeSignTextColor: '#ffffff',
+    conductorAsk: conductorAsk || `${destinationArea}?`,
+    lookFor: `Basi lenye kibao cha '${routeSign || name}' au uliza kondakta: '${conductorAsk || (destinationArea + '?')}'`,
+    vehicle: { type: transportType === 'brt' ? 'Blue Articulated BRT Bus (Mwendokasi)' : 'Toyota Coaster / Eicher Daladala', capacity: '', color: '', image: transportType === 'brt' ? '/images/brt.svg' : '/images/daladala.svg' },
+    stops: [],
+    coordinates,
+    distanceKm: distanceKm ? parseFloat(distanceKm) : null,
+    estimatedTimeMinutes: estimatedTimeMinutes ? parseInt(estimatedTimeMinutes, 10) : 30,
+    walkingMinutesTotal: 5,
+    transfersCount: 0,
+    fareEstimatedTsh: fareEstimatedTsh ? parseInt(fareEstimatedTsh, 10) : 0,
+    fareReliability: 'estimated',
+    operatingHours: operatingHours || '05:00 - 23:00',
+    verificationStatus: 'verified',
+    lastVerified: todayStr(),
+    description: description || ''
+  };
   routes.push(newRoute);
   saveData('routes.json', routes);
   res.json({ success: true, message: 'Njia imeongezwa kikamilifu', route: newRoute });
 });
 
-app.post('/api/admin/stops', (req, res) => {
+app.put('/api/admin/routes/:id', requireAdmin, (req, res) => {
+  const routes = loadData('routes.json') || [];
+  const route = routes.find(r => r.id === req.params.id);
+  if (!route) return res.status(404).json({ success: false, error: 'Njia haijapatikana' });
+  const updatable = ['name', 'swName', 'startArea', 'destinationArea', 'transportType', 'routeNumber',
+    'routeSign', 'conductorAsk', 'lookFor', 'fareEstimatedTsh', 'estimatedTimeMinutes',
+    'distanceKm', 'operatingHours', 'description', 'verificationStatus', 'cityId'];
+  updatable.forEach(k => { if (req.body[k] !== undefined && req.body[k] !== '') route[k] = req.body[k]; });
+  if (req.body.coordPath) {
+    const coordinates = parseCoordPath(req.body.coordPath);
+    if (!coordinates) return res.status(400).json({ success: false, error: 'coordPath si sahihi (lat,lng kwa mstari)' });
+    route.coordinates = coordinates;
+  }
+  route.lastVerified = todayStr();
+  saveData('routes.json', routes);
+  res.json({ success: true, message: 'Njia imesasishwa', route });
+});
+
+app.delete('/api/admin/routes/:id', requireAdmin, (req, res) => {
+  const routes = loadData('routes.json') || [];
+  const idx = routes.findIndex(r => r.id === req.params.id);
+  if (idx < 0) return res.status(404).json({ success: false, error: 'Njia haijapatikana' });
+  const [removed] = routes.splice(idx, 1);
+  saveData('routes.json', routes);
+  res.json({ success: true, message: 'Njia imefutwa', route: removed });
+});
+
+app.post('/api/admin/stops', requireAdmin, (req, res) => {
+  const { name, cityId, areaId, coordText, transportTypes, landmarks, notes } = req.body || {};
+  if (!name) return res.status(400).json({ success: false, error: 'Jina la kituo linahitajika' });
+  const coordinates = parseCoordPair(coordText);
+  if (!coordinates) {
+    return res.status(400).json({ success: false, error: 'Weka koordinati sahihi: "lat,lng" mfano -6.8125, 39.2730' });
+  }
   const stops = loadData('stops.json') || [];
-  const newStop = { id: `stop_${Date.now()}`, verificationStatus: 'verified', lastVerified: new Date().toISOString().split('T')[0], ...req.body };
+  const newStop = {
+    id: `stop_${Date.now()}`,
+    name,
+    cityId: cityId || 'dar-es-salaam',
+    areaId: areaId || '',
+    coordinates,
+    transportTypes: Array.isArray(transportTypes) ? transportTypes : String(transportTypes || 'daladala').split(',').map(s => s.trim()).filter(Boolean),
+    routes: [],
+    landmarks: Array.isArray(landmarks) ? landmarks : String(landmarks || '').split('\n').map(s => s.trim()).filter(Boolean),
+    verificationStatus: 'verified',
+    lastVerified: todayStr(),
+    notes: notes || ''
+  };
   stops.push(newStop);
   saveData('stops.json', stops);
   res.json({ success: true, message: 'Kituo kimeongezwa kikamilifu', stop: newStop });
 });
 
-app.post('/api/admin/reports/:id/verify', (req, res) => {
+app.put('/api/admin/stops/:id', requireAdmin, (req, res) => {
+  const stops = loadData('stops.json') || [];
+  const stop = stops.find(s => s.id === req.params.id);
+  if (!stop) return res.status(404).json({ success: false, error: 'Kituo hakijapatikana' });
+  ['name', 'cityId', 'areaId', 'notes', 'verificationStatus'].forEach(k => {
+    if (req.body[k] !== undefined && req.body[k] !== '') stop[k] = req.body[k];
+  });
+  if (req.body.coordText) {
+    const coordinates = parseCoordPair(req.body.coordText);
+    if (!coordinates) return res.status(400).json({ success: false, error: 'Koordinati si sahihi (lat,lng)' });
+    stop.coordinates = coordinates;
+  }
+  if (req.body.transportTypes !== undefined) {
+    stop.transportTypes = Array.isArray(req.body.transportTypes)
+      ? req.body.transportTypes
+      : String(req.body.transportTypes).split(',').map(s => s.trim()).filter(Boolean);
+  }
+  stop.lastVerified = todayStr();
+  saveData('stops.json', stops);
+  res.json({ success: true, message: 'Kituo kimesasishwa', stop });
+});
+
+app.delete('/api/admin/stops/:id', requireAdmin, (req, res) => {
+  const stops = loadData('stops.json') || [];
+  const idx = stops.findIndex(s => s.id === req.params.id);
+  if (idx < 0) return res.status(404).json({ success: false, error: 'Kituo hakijapatikana' });
+  const [removed] = stops.splice(idx, 1);
+  saveData('stops.json', stops);
+  res.json({ success: true, message: 'Kituo kimefutwa', stop: removed });
+});
+
+app.post('/api/admin/reports/:id/verify', requireAdmin, (req, res) => {
   const repData = loadData('reports_analytics.json') || { reports: [] };
   const report = repData.reports.find(r => r.id === req.params.id);
   if (!report) return res.status(404).json({ success: false, error: 'Ripoti haijapatikana' });
