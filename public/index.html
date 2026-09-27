@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NIFIKISHE — Kutoka ulipo, hadi unakokwenda</title>
+  <meta name="description" content="Mwongozo wa kisasa wa usafiri wa umma: Daladala, BRT Mwendokasi, Bajaji na njia za masoko kwa lugha ya Kiswahili.">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#059669">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" type="image/svg+xml" href="/icons/icon-512.svg">
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <div class="brand-wrapper" onclick="showLandingView()">
+        <div class="brand-icon">
+          <img src="/icons/icon-512.svg" alt="N" style="width: 28px; height: 28px; border-radius: 6px;">
+        </div>
+        <div class="brand-text">
+          <h1>NIFIKISHE</h1>
+          <span class="brand-tagline" data-i18n="tagline">Kutoka ulipo, hadi unakokwenda.</span>
+        </div>
+      </div>
+
+      <nav class="header-nav-tabs">
+        <button class="nav-tab-btn active" id="tabHomeBtn" onclick="showLandingView()">
+          &#127968; <span data-i18n="navHome">Nyumbani</span>
+        </button>
+        <button class="nav-tab-btn" id="tabMapBtn" onclick="showAppView()">
+          &#128506; <span data-i18n="navNavigate">Ramani na Safari</span>
+        </button>
+        <button class="nav-tab-btn" id="tabKariakooBtn" onclick="jumpToKariakooExplore()">
+          &#127978; <span data-i18n="navKariakoo">Soko la Kariakoo</span>
+        </button>
+      </nav>
+
+      <div class="header-center">
+        <div class="city-selector-badge" id="citySelectorBtn" title="Badili Mji">
+          <span>&#127481;&#127487;</span>
+          <span id="currentCityName">Dar es Salaam</span>
+          <span style="font-size: 10px;">&#9660;</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="lang-switch">
+          <button class="btn-lang-toggle active" id="btnLangSw" onclick="setAppLanguage('sw')">SW</button>
+          <button class="btn-lang-toggle" id="btnLangEn" onclick="setAppLanguage('en')">EN</button>
+        </div>
+
+        <button class="btn-header-action" onclick="openSavedRoutesModal()" title="Safari Zilizohifadhiwa">
+          <span>&#11088;</span>
+          <span class="action-text" data-i18n="savedTrips">Zilizohifadhiwa</span>
+        </button>
+
+        <button class="btn-header-action" onclick="openReportModal()" title="Ripoti Changamoto">
+          <span>&#9888;</span>
+          <span class="action-text" data-i18n="reportIssue">Ripoti</span>
+        </button>
+
+        <button class="btn-header-action" onclick="openAdminModal()" title="Dashibodi ya Mfumo">
+          <span>&#9881;</span>
+          <span class="action-text" data-i18n="adminPortal">Admin</span>
+        </button>
+      </div>
+    </header>
+
+    <div id="landingView" class="landing-page-view">
+      <section class="hero-section">
+        <div class="hero-content">
+          <div class="hero-badge">
+            <span>&#10024;</span> <span data-i18n="heroBadge">Mfumo wa Kiswahili wa Usafiri wa Umma Tanzania</span>
+          </div>
+          <h1 class="hero-title">
+            <span data-i18n="heroHeadline">Safiri Bila Shida.</span><br>
+            <span class="hero-highlight">Kutoka ulipo, hadi unakokwenda.</span>
+          </h1>
+          <p class="hero-subtitle" data-i18n="heroSubtitle">
+            Pata mwongozo sahihi wa <strong>Daladala</strong>, <strong>BRT Mwendokasi</strong>, nauli halisi, vibao vya kusoma kwenye gari, maswali ya kumuuliza kondakta na maelekezo ya mitaani Kariakoo.
+          </p>
+
+          <div class="hero-search-card">
+            <div class="hero-search-inputs">
+              <div class="search-input-pill">
+                <span class="pill-dot green"></span>
+                <input type="text" id="heroOriginInput" placeholder="Uko wapi? (Mfano: Mbezi Mwisho)" value="Mbezi Mwisho">
+              </div>
+              <div class="search-arrow-divider">&#10142;</div>
+              <div class="search-input-pill">
+                <span class="pill-dot red"></span>
+                <input type="text" id="heroDestInput" placeholder="Unaenda wapi? (Mfano: Kariakoo Market)" value="Kariakoo Market">
+              </div>
+            </div>
+            <button class="btn-hero-cta" onclick="startSearchFromLanding()">
+              &#129517; <span data-i18n="heroSearchCta">Tafuta Safari Sasa</span>
+            </button>
+          </div>
+
+          <div class="hero-stats-row">
+            <div class="hero-stat">
+              <span class="stat-number">50,000+</span>
+              <span class="stat-label" data-i18n="statTravelers">Wasafiri Kila Siku</span>
+            </div>
+            <div class="hero-stat-divider"></div>
+            <div class="hero-stat">
+              <span class="stat-number">100%</span>
+              <span class="stat-label" data-i18n="statSwahili">Kiswahili Asilia</span>
+            </div>
+            <div class="hero-stat-divider"></div>
+            <div class="hero-stat">
+              <span class="stat-number">TSh 0</span>
+              <span class="stat-label" data-i18n="statFree">Bure Kutumia</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-visual">
+          <div class="hero-visual-card">
+            <div class="visual-header">
+              <span class="status-indicator"></span>
+              <strong>Utambulisho Halisi wa Gari</strong>
+            </div>
+            <img src="/images/daladala.svg" alt="Daladala ya Tanzania" class="hero-transit-img">
+            <div class="visual-info">
+              <div class="route-sign-badge">MBEZI - KARIAKOO</div>
+              <p class="ask-prompt">&#128483; <em>"Uliza Kondakta: Kariakoo?"</em></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="features-section">
+        <div class="section-heading-center">
+          <span class="section-tag" data-i18n="featuresTag">KWA NINI NIFIKISHE?</span>
+          <h2 data-i18n="featuresTitle">Iliyojengwa Maalum kwa Mazingira ya Tanzania</h2>
+          <p data-i18n="featuresSubtitle">Tofauti na ramani za kigeni zisizojua daladala, NIFIKISHE inakupa kila unachohitaji kusafiri kwa uhakika.</p>
+        </div>
+
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon" style="background:#ecfdf5; color:#059669;">&#128652;</div>
+            <h3>Vibao na Utambulisho wa Gari</h3>
+            <p>Usikisie tena rangi wala maandishi ya gari. Tunakuonyesha kibao kilichoandikwa juu ya daladala na sentensi sahihi ya kumuuliza kondakta.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon" style="background:#eff6ff; color:#2563eb;">&#128653;</div>
+            <h3>BRT Mwendokasi + Daladala</h3>
+            <p>Pata chaguo la safari mseto. Jua kituo cha kuingilia mwendokasi, nauli iliyothibitishwa na namna ya kuepuka foleni kubwa mjini.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon" style="background:#fffbeb; color:#d97706;">&#127978;</div>
+            <h3>Micro-Navigation ya Kariakoo</h3>
+            <p>Ukishashuka Msimbazi au Gerezani, tunakuongoza kwa miguu mtaa kwa mtaa hadi kwenye maduka ya nguo, simu za mkononi au vyakula.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon" style="background:#fdf2f8; color:#db2777;">&#128266;</div>
+            <h3>Sauti na Arifa za Kushuka</h3>
+            <p>Pata mwongozo wa sauti kwa Kiswahili unaokupa tahadhari kabla ya kufika kwenye kituo chako ili usipitilize.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="showcase-section">
+        <div class="showcase-card">
+          <div class="showcase-text">
+            <h2 data-i18n="showcaseTitle">Uzoefu wa Moja kwa Moja kwenye Simu na Kompyuta</h2>
+            <p data-i18n="showcaseBody">Tumia mtandao au sakinisha (install) kama PWA bila malipo yoyote. Inafanya kazi haraka hata ukiwa na bando kidogo.</p>
+            <div class="showcase-actions">
+              <button class="btn-hero-cta" onclick="showAppView()">&#129517; <span data-i18n="showcaseOpenMap">Fungua Ramani Sasa</span></button>
+              <button class="btn-demo-trigger" onclick="triggerDemoFromLanding()">&#128640; <span data-i18n="showcaseDemo">Jaribu Mfano wa Safari</span></button>
+            </div>
+          </div>
+          <div class="showcase-image-wrap">
+            <img src="/images/brt.svg" alt="BRT Mwendokasi Dar es Salaam" class="showcase-img">
+          </div>
+        </div>
+      </section>
+
+      <footer class="landing-footer">
+        <div class="footer-top">
+          <div class="footer-brand">
+            <div class="brand-wrapper">
+              <div class="brand-icon">N</div>
+              <div class="brand-text">
+                <h2>NIFIKISHE</h2>
+                <span class="brand-tagline">Kutoka ulipo, hadi unakokwenda.</span>
+              </div>
+            </div>
+            <p class="footer-desc">
+              Jukwaa la Kiswahili kwa urambazaji na taarifa za usafiri wa umma mijini Afrika Mashariki.
+            </p>
+          </div>
+          <div class="footer-links-group">
+            <h4 data-i18n="footerCities">Miji ya Sasa</h4>
+            <ul>
+              <li><a href="javascript:void(0)" onclick="quickSelectCity('dar-es-salaam')">Dar es Salaam</a></li>
+              <li><a href="javascript:void(0)" onclick="quickSelectCity('dodoma')">Dodoma</a></li>
+              <li><a href="javascript:void(0)" onclick="quickSelectCity('arusha')">Arusha</a></li>
+              <li><a href="javascript:void(0)" onclick="quickSelectCity('mwanza')">Mwanza</a></li>
+              <li><a href="javascript:void(0)" onclick="quickSelectCity('zanzibar')">Zanzibar</a></li>
+            </ul>
+          </div>
+          <div class="footer-links-group">
+            <h4 data-i18n="footerServices">Huduma</h4>
+            <ul>
+              <li><a href="javascript:void(0)" onclick="showAppView()">Tafuta Safari</a></li>
+              <li><a href="javascript:void(0)" onclick="jumpToKariakooExplore()">Mtaa wa Kariakoo</a></li>
+              <li><a href="javascript:void(0)" onclick="openReportModal()">Ripoti Bei au Kituo</a></li>
+              <li><a href="javascript:void(0)" onclick="openAdminModal()">Admin na Data</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>&copy; 2026 NIFIKISHE Platform. Haki zote zimehifadhiwa. Imetengenezwa kwa ajili ya wasafiri wa Tanzania.</p>
+        </div>
+      </footer>
+    </div>
+
+    <div id="appWorkspaceView" class="workspace-layout" style="display: none;">
+      <aside class="sidebar-panel">
+        <div class="sidebar-content">
+
+          <div class="app-top-action-bar">
+            <button class="btn-subtle" onclick="showLandingView()">
+              &#8592; <span data-i18n="homeButton">Nyumbani</span>
+            </button>
+            <div class="demo-quick-bar">
+              <div class="demo-quick-text">Mbezi &#10142; Kariakoo</div>
+              <button class="demo-quick-btn" id="btnRunDemoFlow" onclick="triggerFullDemo()">
+                &#128640; Demo
+              </button>
+            </div>
+          </div>
+
+          <div class="search-card" id="searchCard">
+            <div class="search-input-group" style="position: relative;">
+              <span class="icon-point" style="color: #059669;">&#128205;</span>
+              <div class="input-body">
+                <label data-i18n="searchOriginPrompt">Uko wapi?</label>
+                <input type="text" id="originInput" placeholder="Mbezi Mwisho..." autocomplete="off">
+              </div>
+              <button class="btn-gps-auto" onclick="useCurrentGpsLocation()" title="Tumia nilipo sasa">
+                GPS
+              </button>
+              <div class="autocomplete-dropdown" id="originDropdown"></div>
+            </div>
+
+            <div class="search-input-group" style="position: relative;">
+              <span class="icon-point" style="color: #dc2626;">&#127919;</span>
+              <div class="input-body">
+                <label data-i18n="searchDestPrompt">Unaenda wapi?</label>
+                <input type="text" id="destInput" placeholder="Kariakoo Market, Posta, DIT..." autocomplete="off">
+              </div>
+              <div class="autocomplete-dropdown" id="destDropdown"></div>
+            </div>
+
+            <div class="quick-chips-row">
+              <span style="font-size: 11px; color: var(--text-muted); align-self: center; font-weight: 600;" data-i18n="quickLabel">Haraka:</span>
+              <div class="chip-dest" onclick="selectQuickDestination('Kariakoo Market', [-6.8196, 39.2745])">
+                &#127978; Kariakoo
+              </div>
+              <div class="chip-dest" onclick="selectQuickDestination('Posta Mpya', [-6.8161, 39.2889])">
+                &#127963; Posta CBD
+              </div>
+              <div class="chip-dest" onclick="selectQuickDestination('Mlimani City', [-6.7712, 39.2198])">
+                &#128717; Mlimani City
+              </div>
+              <div class="chip-dest" onclick="selectQuickDestination('Muhimbili Hospital', [-6.8065, 39.2755])">
+                &#127973; Muhimbili
+              </div>
+            </div>
+
+            <button class="btn-nifikishe" id="btnNifikishe" onclick="performJourneySearch()">
+              <span style="font-size: 18px;">&#129517;</span>
+              <span data-i18n="ctaNifikishe">NIFIKISHE</span>
+            </button>
+          </div>
+
+          <div class="audio-toggle-bar">
+            <label class="audio-switch-label">
+              <input type="checkbox" id="voiceGuidanceCheckbox" checked>
+              <span class="audio-label-text">&#128266; <span data-i18n="voiceGuidance">Sauti ya Mwongozo wa Kiswahili</span></span>
+            </label>
+          </div>
+
+          <div id="routeResultsContainer" style="display: none; flex-direction: column; gap: 14px;">
+            <div class="section-header">
+              <div class="section-title" data-i18n="availableRoutesTitle">NJIA ZINAZOPATIKANA</div>
+              <div class="sort-filters">
+                <button class="filter-btn active" id="filterFastest" onclick="sortRoutes('fastest')" data-i18n="sortFastest">Haraka</button>
+                <button class="filter-btn" id="filterTransfers" onclick="sortRoutes('transfers')" data-i18n="sortDirect">Moja kwa moja</button>
+                <button class="filter-btn" id="filterCost" onclick="sortRoutes('cost')" data-i18n="sortFare">Nauli</button>
+              </div>
+            </div>
+            <div id="routesList" style="display: flex; flex-direction: column; gap: 12px;"></div>
+          </div>
+
+          <div id="journeyDetailContainer" style="display: none; flex-direction: column; gap: 14px;"></div>
+          <div id="complexAreaContainer" style="display: none; flex-direction: column; gap: 14px;"></div>
+          <div id="liveSimulationCard" style="display: none;"></div>
+
+        </div>
+      </aside>
+
+      <main class="map-viewport">
+        <div id="map"></div>
+        <div class="map-floating-controls">
+          <button class="btn-floating" onclick="useCurrentGpsLocation()" title="Eneo Langu">&#128205;</button>
+          <button class="btn-floating" onclick="resetMapView()" title="Onyesha Mji Mzima">&#128506;</button>
+          <button class="btn-floating" onclick="toggleSavedActiveRoute()" title="Hifadhi Njia Hii">&#11088;</button>
+        </div>
+      </main>
+    </div>
+
+    <div class="modal-overlay" id="cityModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Chagua Mji / Select City</h2>
+          <button class="btn-close-modal" onclick="closeModal('cityModal')">&#10005;</button>
+        </div>
+        <div class="modal-body" id="citiesListContainer"></div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="reportModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>&#9888; Ripoti Mabadiliko ya Usafiri</h2>
+          <button class="btn-close-modal" onclick="closeModal('reportModal')">&#10005;</button>
+        </div>
+        <div class="modal-body">
+          <label class="form-label">Aina ya Taarifa:</label>
+          <select id="reportTypeSelect" class="form-control">
+            <option value="fare_change">Nauli Imebadilika</option>
+            <option value="bus_stop_moved">Kituo cha Basi Kimehamishwa</option>
+            <option value="route_change">Njia ya Usafiri Imebadilika</option>
+            <option value="transport_unavailable">Magari Hayapo au Yamesitishwa</option>
+          </select>
+
+          <label class="form-label">Kichwa cha Habari:</label>
+          <input type="text" id="reportTitleInput" class="form-control" placeholder="Mfano: Nauli ya daladala Mbezi">
+
+          <label class="form-label">Maelezo Zaidi:</label>
+          <textarea id="reportDescInput" rows="3" class="form-control" placeholder="Eleza kwa ufupi ulichokiona ili kitathminiwe..."></textarea>
+
+          <button class="btn-nifikishe" onclick="submitUserReport()">Tuma Taarifa</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="adminModal">
+      <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-header">
+          <h2>&#9881; NIFIKISHE Admin Platform</h2>
+          <button class="btn-close-modal" onclick="closeModal('adminModal')">&#10005;</button>
+        </div>
+        <div class="modal-body" id="adminDataBody">
+          <div style="font-size: 13px; color: var(--text-muted);">Inapakia takwimu za mfumo...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="savedModal">
+      <div class="modal-content" style="max-width: 520px;">
+        <div class="modal-header">
+          <h2>&#11088; Njia Zilizohifadhiwa</h2>
+          <button class="btn-close-modal" onclick="closeModal('savedModal')">&#10005;</button>
+        </div>
+        <div class="modal-body" id="savedRoutesContainer">
+          <p style="font-size: 13px; color: var(--text-muted);">Bado hujaziweka njia zako unazozitumia mara kwa mara.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="/js/i18n.js"></script>
+  <script src="/js/map-service.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
+

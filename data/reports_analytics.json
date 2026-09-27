@@ -1,0 +1,105 @@
+{
+  "reports": [
+    {
+      "id": "rep_1001",
+      "cityId": "dar-es-salaam",
+      "routeId": "route_daladala_mbezi_kariakoo",
+      "type": "fare_change",
+      "title": "Nauli ya daladala imeongezeka kidogo masaa ya usiku",
+      "description": "Kuanzia saa tatu usiku baadhi ya makondakta wanadai 1,000 TSh badala ya 700 TSh.",
+      "reportedBy": "Juma S.",
+      "timestamp": "2026-09-24T18:30:00Z",
+      "status": "pending_review"
+    },
+    {
+      "id": "rep_1002",
+      "cityId": "dar-es-salaam",
+      "routeId": "route_multimodal_daladala_brt",
+      "type": "bus_stop_moved",
+      "title": "Ujenzi kituo cha Manzese",
+      "description": "Kuna ujenzi wa njia ya watembea kwa miguu hivyo kituo cha daladala kimesogezwa mita 50 mbele.",
+      "reportedBy": "Amina K.",
+      "timestamp": "2026-09-25T09:15:00Z",
+      "status": "verified"
+    }
+  ],
+  "analytics": {
+    "totalSearches": 14280,
+    "topOrigins": [
+      {
+        "name": "Mbezi Mwisho",
+        "count": 4820
+      },
+      {
+        "name": "Kimara Mwisho",
+        "count": 3150
+      },
+      {
+        "name": "Tegeta Nyuki",
+        "count": 2100
+      },
+      {
+        "name": "Gongo la Mboto",
+        "count": 1840
+      }
+    ],
+    "topDestinations": [
+      {
+        "name": "Kariakoo Market",
+        "count": 6240
+      },
+      {
+        "name": "Posta Mpya (CBD)",
+        "count": 3490
+      },
+      {
+        "name": "Mlimani City",
+        "count": 2110
+      },
+      {
+        "name": "Muhimbili Hospital",
+        "count": 1440
+      }
+    ],
+    "popularRoutes": [
+      {
+        "name": "Mbezi Mwisho → Kariakoo",
+        "type": "daladala",
+        "count": 5120
+      },
+      {
+        "name": "Kimara → Kariakoo Gerezani",
+        "type": "brt",
+        "count": 4650
+      },
+      {
+        "name": "Mbezi → Posta",
+        "type": "daladala",
+        "count": 2980
+      }
+    ],
+    "cityBreakdown": [
+      {
+        "city": "Dar es Salaam",
+        "activeSearches": 12850,
+        "coverage": "95%"
+      },
+      {
+        "city": "Arusha",
+        "activeSearches": 840,
+        "coverage": "60%"
+      },
+      {
+        "city": "Mwanza",
+        "activeSearches": 390,
+        "coverage": "50%"
+      },
+      {
+        "city": "Dodoma",
+        "activeSearches": 200,
+        "coverage": "40%"
+      }
+    ],
+    "activeUsersNow": 184
+  }
+}

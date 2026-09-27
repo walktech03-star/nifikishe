@@ -1,0 +1,164 @@
+{
+  "countries": [
+    {
+      "id": "tz",
+      "name": "Tanzania",
+      "code": "TZ",
+      "currency": "TZS",
+      "currencySymbol": "TSh",
+      "defaultLanguage": "sw"
+    },
+    {
+      "id": "ke",
+      "name": "Kenya",
+      "code": "KE",
+      "currency": "KES",
+      "currencySymbol": "KSh",
+      "defaultLanguage": "sw"
+    },
+    {
+      "id": "ug",
+      "name": "Uganda",
+      "code": "UG",
+      "currency": "UGX",
+      "currencySymbol": "USh",
+      "defaultLanguage": "en"
+    }
+  ],
+  "cities": [
+    {
+      "id": "dar-es-salaam",
+      "countryId": "tz",
+      "name": "Dar es Salaam",
+      "swName": "Dar es Salaam",
+      "center": [-6.816064, 39.280358],
+      "bounds": [
+        [-6.95, 39.1],
+        [-6.65, 39.35]
+      ],
+      "zoom": 13,
+      "active": true,
+      "transportTypes": ["daladala", "brt", "bajaji", "bodaboda", "walking", "taxi", "train"],
+      "popularDestinations": ["kariakoo-market", "posta-cbd", "mlimani-city", "muhimbili", "morocco-brt"]
+    },
+    {
+      "id": "arusha",
+      "countryId": "tz",
+      "name": "Arusha",
+      "swName": "Arusha",
+      "center": [-3.386925, 36.682995],
+      "zoom": 13,
+      "active": true,
+      "transportTypes": ["daladala", "bajaji", "bodaboda", "walking", "taxi"]
+    },
+    {
+      "id": "mwanza",
+      "countryId": "tz",
+      "name": "Mwanza",
+      "swName": "Mwanza",
+      "center": [-2.5164, 32.9033],
+      "zoom": 13,
+      "active": true,
+      "transportTypes": ["daladala", "bajaji", "bodaboda", "walking", "ferry"]
+    },
+    {
+      "id": "dodoma",
+      "countryId": "tz",
+      "name": "Dodoma",
+      "swName": "Dodoma",
+      "center": [-6.163, 35.7516],
+      "zoom": 13,
+      "active": true,
+      "transportTypes": ["daladala", "bajaji", "bodaboda", "walking"]
+    },
+    {
+      "id": "zanzibar",
+      "countryId": "tz",
+      "name": "Zanzibar (Stone Town)",
+      "swName": "Zanzibar",
+      "center": [-6.1659, 39.2026],
+      "zoom": 14,
+      "active": true,
+      "transportTypes": ["daladala", "walking", "taxi", "ferry"]
+    },
+    {
+      "id": "nairobi",
+      "countryId": "ke",
+      "name": "Nairobi",
+      "swName": "Nairobi",
+      "center": [-1.286389, 36.817223],
+      "zoom": 13,
+      "active": true,
+      "transportTypes": ["matatu", "bodaboda", "walking", "rail", "taxi"]
+    },
+    {
+      "id": "kampala",
+      "countryId": "ug",
+      "name": "Kampala",
+      "swName": "Kampala",
+      "center": [0.347596, 32.582520],
+      "zoom": 13,
+      "active": true,
+      "transportTypes": ["taxi-matatu", "boda", "walking"]
+    }
+  ],
+  "areas": [
+    {
+      "id": "mbezi-mwisho",
+      "cityId": "dar-es-salaam",
+      "name": "Mbezi Mwisho",
+      "swDescription": "Kituo kikuu cha mabasi ya mikoani na daladala upande wa Magharibi mwa Dar es Salaam",
+      "center": [-6.7725, 39.1128],
+      "type": "transport_hub"
+    },
+    {
+      "id": "kimara",
+      "cityId": "dar-es-salaam",
+      "name": "Kimara Mwisho",
+      "swDescription": "Kituo kikuu cha BRT / Mwendokasi Morogoro Road",
+      "center": [-6.7820, 39.1765],
+      "type": "suburb_brt_hub"
+    },
+    {
+      "id": "ubungo",
+      "cityId": "dar-es-salaam",
+      "name": "Ubungo Kibo / Maji",
+      "swDescription": "Makutano makuu ya Barabara ya Morogoro na Sam Nujoma",
+      "center": [-6.7885, 39.2089],
+      "type": "major_junction"
+    },
+    {
+      "id": "magomeni",
+      "cityId": "dar-es-salaam",
+      "name": "Magomeni Mapipa",
+      "swDescription": "Kituo cha mpito cha BRT na daladala kuelekea Kariakoo na Kivukoni",
+      "center": [-6.8042, 39.2612],
+      "type": "transit_node"
+    },
+    {
+      "id": "kariakoo",
+      "cityId": "dar-es-salaam",
+      "name": "Kariakoo",
+      "swDescription": "Soko kuu la kibiashara la Afrika Mashariki lenye maelfu ya maduka na vituo vya usafiri",
+      "center": [-6.8196, 39.2745],
+      "type": "commercial_district",
+      "complexNavigationEnabled": true
+    },
+    {
+      "id": "posta",
+      "cityId": "dar-es-salaam",
+      "name": "Posta (CBD)",
+      "swDescription": "Katikati ya mji, ofisi za serikali na benki",
+      "center": [-6.8161, 39.2889],
+      "type": "central_business_district"
+    },
+    {
+      "id": "mlimani",
+      "cityId": "dar-es-salaam",
+      "name": "Mlimani City / Mwenge",
+      "swDescription": "Eneo la maduka makubwa na Chuo Kikuu cha Dar es Salaam (UDSM)",
+      "center": [-6.7712, 39.2198],
+      "type": "shopping_education"
+    }
+  ]
+}

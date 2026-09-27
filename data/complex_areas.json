@@ -1,0 +1,118 @@
+{
+  "categories": [
+    {
+      "id": "phones",
+      "icon": "📱",
+      "swName": "Simu na Vifaa vya Simu",
+      "enName": "Phones & Accessories",
+      "street": "Aggrey & Msimbazi Street",
+      "walkingSecondsFromMsimbazi": 180,
+      "directions": [
+        "Tembea moja kwa moja kwenye Mtaa wa Msimbazi mita 100",
+        "Geuka kulia kuingia Mtaa wa Aggrey",
+        "Endelea mita 50, maduka ya simu, vioo, chaja yapo kushoto na kulia"
+      ],
+      "highlights": ["Maduka ya simu mpya & used", "Mafundi simu", "Vifaa vya asili vya Apple na Samsung", "Betri na kava"],
+      "coordinates": [-6.8182, 39.2740]
+    },
+    {
+      "id": "computers",
+      "icon": "💻",
+      "swName": "Kompyuta & Tehama",
+      "enName": "Computers & IT",
+      "street": "Congo & Livingstone Street",
+      "walkingSecondsFromMsimbazi": 240,
+      "directions": [
+        "Kutoka kituo cha basi, tembea kuelekea Livingstone St",
+        "Geuka kushoto mtaa wa Congo",
+        "Utaona majengo ya maduka ya kompyuta, printer na spea za laptop"
+      ],
+      "highlights": ["Laptops & Desktops", "Printer cartridges", "Hard drives & RAM", "IT repair workshops"],
+      "coordinates": [-6.8189, 39.2735]
+    },
+    {
+      "id": "clothes",
+      "icon": "👕",
+      "swName": "Nguo, Vitenge & Mitumba",
+      "enName": "Garments & Textiles",
+      "street": "Livingstone & Swahili Street",
+      "walkingSecondsFromMsimbazi": 210,
+      "directions": [
+        "Vuka taa za Msimbazi kuelekea Mtaa wa Swahili",
+        "Mtaa mzima umejaa maduka ya vitenge vya wax, nguo za jumla na rejareja"
+      ],
+      "highlights": ["Vitenge halisi vya wax & kanga", "Suti na nguo za kike", "Nguo za watoto jumla"],
+      "coordinates": [-6.8192, 39.2758]
+    },
+    {
+      "id": "shoes",
+      "icon": "👟",
+      "swName": "Viatu vya Kiume na Kike",
+      "enName": "Footwear & Shoes",
+      "street": "Nyamwezi & Mkunguni Street",
+      "walkingSecondsFromMsimbazi": 300,
+      "directions": [
+        "Fuata Mtaa wa Nyamwezi kuelekea kusini",
+        "Maduka ya sneakers, viatu vya ngozi na sandals yapo upande wa kulia"
+      ],
+      "highlights": ["Sneakers & Raba", "Viatu vya ngozi vya kiofisi", "Viatu vya shule jumla"],
+      "coordinates": [-6.8202, 39.2749]
+    },
+    {
+      "id": "hardware",
+      "icon": "🔧",
+      "swName": "Hardware & Vifaa vya Ujenzi",
+      "enName": "Hardware & Tools",
+      "street": "Swahili & Sikukuu Street",
+      "walkingSecondsFromMsimbazi": 320,
+      "directions": [
+        "Tembea mtaa wa Swahili kuelekea Sikukuu",
+        "Maduka ya mabomba, rangi na zana za kazi"
+      ],
+      "highlights": ["Vifaa vya umeme na taa", "Mabomba ya PVC & fittings", "Rangi za majengo & zana"],
+      "coordinates": [-6.8210, 39.2741]
+    },
+    {
+      "id": "spareparts",
+      "icon": "🚗",
+      "swName": "Spea za Magari & Bajaji",
+      "enName": "Auto Spare Parts",
+      "street": "Tandamti & Gerezani Street",
+      "walkingSecondsFromMsimbazi": 400,
+      "directions": [
+        "Elekea upande wa Gerezani karibu na reli",
+        "Maduka yote ya spea za Toyota, Boxer na bajaji TVS yapo hapa"
+      ],
+      "highlights": ["Mishale ya bajaji & TVS King", "Spea za injini na suspension", "Betri na vilainishi"],
+      "coordinates": [-6.8218, 39.2762]
+    },
+    {
+      "id": "food",
+      "icon": "🍎",
+      "swName": "Chakula, Nafaka & Matunda",
+      "enName": "Fresh Foods & Produce",
+      "street": "Soko Kuu la Kariakoo (Hall)",
+      "walkingSecondsFromMsimbazi": 150,
+      "directions": [
+        "Jengo kuu la soko lenye kuba kubwa",
+        "Ingia ghorofa ya chini (Basement) kwa nafaka au mbele kwa matunda na mboga"
+      ],
+      "highlights": ["Mchele wa Kyela & Mbeya", "Viungo safi vya Unguja", "Matunda na nafaka jumla"],
+      "coordinates": [-6.8197, 39.2746]
+    },
+    {
+      "id": "wholesale",
+      "icon": "🏪",
+      "swName": "Maduka ya Jumla (Wholesale)",
+      "enName": "Wholesale Plazas",
+      "street": "Mchikichi & Aggrey Street",
+      "walkingSecondsFromMsimbazi": 220,
+      "directions": [
+        "Mtaa wa Mchikichi kuelekea Fire",
+        "Ghorofa za maduka makubwa ya mzigo wa jumla kutoka China na Dubai"
+      ],
+      "highlights": ["Bidhaa za plastiki jumla", "Vipodozi na manukato", "Vyombo vya nyumbani bulk"],
+      "coordinates": [-6.8178, 39.2750]
+    }
+  ]
+}

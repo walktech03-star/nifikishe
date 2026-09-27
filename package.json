@@ -1,0 +1,19 @@
+{
+  "name": "nifikishe",
+  "version": "1.0.0",
+  "description": "NIFIKISHE — Smart Mobility & Navigation Platform (Kutoka ulipo, hadi unakokwenda)",
+  "private": true,
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "verify": "node tools/verify.js",
+    "verify:live": "node tools/verify.js --live"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "cors": "^2.8.5"
+  }
+}
