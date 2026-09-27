@@ -151,29 +151,11 @@ function setAppLanguage(lang) {
   }
 }
 
+// NOTE: useCurrentGpsLocation() now lives in live-gps.js (continuous GPS
+// watch + nearby-vehicle tracking). Kept here as a thin alias for old callers.
 function useCurrentGpsLocation() {
-  if (!mapService || !mapService.map) {
-    alert("Ramani bado inapakiwa — subiri sekunde chache kisha jaribu tena.");
-    if (mapService) mapService.refresh();
-    return;
-  }
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const latLng = [pos.coords.latitude, pos.coords.longitude];
-        userOrigin = { name: "Eneo Langu la Sasa (GPS)", coordinates: latLng };
-        document.getElementById('originInput').value = userOrigin.name;
-        mapService.updateUserLocation(latLng, "Eneo Langu la Sasa");
-        mapService.panToUser();
-      },
-      (err) => {
-        alert("Hatukuweza kupata GPS yako moja kwa moja. Tutatumia eneo la mfano: Mbezi Mwisho.");
-        mapService.updateUserLocation(userOrigin.coordinates, userOrigin.name);
-      }
-    );
-  } else {
-    mapService.updateUserLocation(userOrigin.coordinates, userOrigin.name);
-  }
+  if (typeof toggleLiveGps === 'function') return toggleLiveGps();
+  if (mapService) mapService.refresh();
 }
 
 function resetMapView() {

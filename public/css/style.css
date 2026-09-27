@@ -786,6 +786,16 @@ body {
   box-shadow: var(--shadow-lg);
 }
 
+.btn-floating.gps-on {
+  background: #059669;
+  color: #fff;
+  border-color: #059669;
+  animation: pulse-ring 2s infinite;
+}
+
+/* Live vehicle markers */
+.live-vehicle-marker { background: transparent; border: none; }
+
 /* Demo Quick Bar */
 .demo-quick-bar {
   background: #ecfdf5;

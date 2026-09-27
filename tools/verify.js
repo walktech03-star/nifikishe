@@ -36,7 +36,7 @@ fs.readdirSync(dataDir).filter(f => f.endsWith('.json')).forEach(f => {
 });
 
 // --- 2. JavaScript syntax ---------------------------------------------------
-['public/js/app.js', 'public/js/i18n.js', 'public/js/map-service.js', 'public/js/admin-panel.js', 'public/sw.js', 'server.js']
+['public/js/app.js', 'public/js/i18n.js', 'public/js/map-service.js', 'public/js/live-gps.js', 'public/js/admin-panel.js', 'public/sw.js', 'server.js']
   .forEach(rel => {
     try {
       execFileSync(process.execPath, ['--check', path.join(root, rel)], { stdio: 'pipe' });
@@ -48,7 +48,7 @@ fs.readdirSync(dataDir).filter(f => f.endsWith('.json')).forEach(f => {
 
 // --- 3. HTML <-> JS wiring --------------------------------------------------
 const html = read(path.join(pub, 'index.html'));
-const js = ['app.js', 'i18n.js', 'map-service.js', 'admin-panel.js']
+const js = ['app.js', 'i18n.js', 'map-service.js', 'live-gps.js', 'admin-panel.js']
   .map(f => read(path.join(pub, 'js', f))).join('\n');
 const css = read(path.join(pub, 'css', 'style.css'));
 
@@ -82,7 +82,7 @@ const enBlock = i18nSrc.slice(i18nSrc.indexOf('en: {'));
 notes.push('data-i18n keys checked: ' + i18nKeys.size);
 
 // --- 5. CSS coverage for JS-generated classes -------------------------------
-const generated = ['route-card-body', 'route-title', 'route-metric-pill', 'route-time-box', 'item-title', 'item-sub', 'vehicle-preview-img', 'autocomplete-item'];
+const generated = ['route-card-body', 'route-title', 'route-metric-pill', 'route-time-box', 'item-title', 'item-sub', 'vehicle-preview-img', 'autocomplete-item', 'live-vehicle-marker', 'gps-on'];
 generated.filter(c => !css.includes('.' + c)).forEach(c => problems.push('CSS rule missing for JS-generated class: ' + c));
 
 // --- 5b. Brand-name guard: NIFIKISHE must never be translated ---------------
@@ -104,9 +104,10 @@ try {
 const live = process.argv.includes('--live');
 if (live) {
   const port = process.env.PORT || 3000;
-  const routes = ['/', '/css/style.css', '/js/app.js', '/manifest.json', '/sw.js', '/icons/icon-512.svg',
+  const routes = ['/', '/css/style.css', '/js/app.js', '/js/live-gps.js', '/manifest.json', '/sw.js', '/icons/icon-512.svg',
     '/images/daladala.svg', '/images/brt.svg', '/healthz', '/api/cities', '/api/search?q=kariakoo',
-    '/api/complex-areas/kariakoo', '/api/admin/overview'];
+    '/api/complex-areas/kariakoo', '/api/admin/overview', '/api/live/vehicles?city=dar-es-salaam',
+    '/api/live/nearby?lat=-6.7885&lng=39.2089&city=dar-es-salaam'];
   const probe = p => new Promise(resolve => {
     const req = http.get({ host: 'localhost', port, path: p }, res => {
       let n = 0;

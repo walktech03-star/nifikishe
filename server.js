@@ -598,6 +598,135 @@ app.delete('/api/admin/stops/:id', requireAdmin, (req, res) => {
   res.json({ success: true, message: 'Kituo kimefutwa', stop: removed });
 });
 
+// ---------------------------------------------------------------------------
+// LIVE VEHICLES (simulated real-time fleet)
+// Simulates buses moving along each route's coordinates so users can see
+// nearby cars and time their walk to the stop. Deterministic: position is a
+// function of time, so all clients see the same fleet without a database.
+// Upgrade path: replace simulateFleet() with real GPS ingested from
+// driver phones / vehicle trackers.
+// ---------------------------------------------------------------------------
+function lerpCoord(a, b, t) {
+  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+}
+
+function routeLengthMeters(coords) {
+  let total = 0;
+  for (let i = 1; i < coords.length; i++) total += getDistanceMeters(coords[i - 1], coords[i]);
+  return total;
+}
+
+function pointAlongRoute(coords, frac) {
+  if (!coords || coords.length < 2) return coords ? coords[0] : null;
+  const clamped = Math.min(0.9999, Math.max(0, frac));
+  const segFloat = clamped * (coords.length - 1);
+  const seg = Math.floor(segFloat);
+  const t = segFloat - seg;
+  return lerpCoord(coords[seg], coords[Math.min(seg + 1, coords.length - 1)], t);
+}
+
+function simulateFleet(cityId) {
+  const routes = (loadData('routes.json') || []).filter(r => !cityId || r.cityId === cityId);
+  const nowSec = Date.now() / 1000;
+  const vehicles = [];
+  routes.forEach((route, ri) => {
+    if (!route.coordinates || route.coordinates.length < 2) return;
+    // 2-3 vehicles per route, staggered. Speed ~ route length per estimatedTime.
+    const count = route.transportType === 'brt' ? 3 : 2;
+    const cycleSec = Math.max(600, (route.estimatedTimeMinutes || 40) * 60 * 2); // round trip
+    for (let v = 0; v < count; v++) {
+      const phase = (ri * 0.37 + v / count) % 1;
+      const progress = (nowSec / cycleSec + phase) % 1;
+      // bounce: 0→1→0 so vehicles go back and forth like real buses
+      const frac = progress < 0.5 ? progress * 2 : (1 - progress) * 2;
+      const pos = pointAlongRoute(route.coordinates, frac);
+      const headingOut = progress < 0.5;
+      const end = headingOut ? route.coordinates[route.coordinates.length - 1] : route.coordinates[0];
+      const distToEndM = getDistanceMeters(pos, end);
+      const avgSpeedMpm = routeLengthMeters(route.coordinates) / Math.max(1, (route.estimatedTimeMinutes || 40));
+      vehicles.push({
+        id: `veh_${route.id}_${v}`,
+        routeId: route.id,
+        routeName: route.name,
+        transportType: route.transportType || 'daladala',
+        routeSign: route.routeSign || route.name,
+        coordinates: [Math.round(pos[0] * 1e6) / 1e6, Math.round(pos[1] * 1e6) / 1e6],
+        heading: headingOut ? 'outbound' : 'inbound',
+        destination: headingOut ? route.destinationArea : route.startArea,
+        etaToTerminusMin: Math.max(1, Math.round(distToEndM / Math.max(60, avgSpeedMpm))),
+        speedKph: Math.round(avgSpeedMpm * 0.06 * 10) / 10,
+        occupancy: ['empty', 'seats', 'full'][Math.floor((nowSec / 300 + ri + v) % 3)],
+        updatedAt: new Date().toISOString()
+      });
+    }
+  });
+  return vehicles;
+}
+
+// GET /api/live/vehicles — fleet positions, optionally with distance to user
+app.get('/api/live/vehicles', (req, res) => {
+  const { city, routeId, lat, lng, maxDistance } = req.query;
+  let vehicles = simulateFleet(city || undefined);
+  if (routeId) vehicles = vehicles.filter(v => v.routeId === routeId);
+  if (lat && lng) {
+    const user = [parseFloat(lat), parseFloat(lng)];
+    const radius = maxDistance ? parseFloat(maxDistance) : 5000;
+    vehicles = vehicles.map(v => {
+      const d = getDistanceMeters(user, v.coordinates);
+      return { ...v, distanceMeters: d, walkTimeMinutes: Math.max(1, Math.round(d / 80)) };
+    }).filter(v => v.distanceMeters <= radius)
+      .sort((a, b) => a.distanceMeters - b.distanceMeters);
+  }
+  res.json({ success: true, count: vehicles.length, vehicles, simulated: true });
+});
+
+// GET /api/live/nearby — one call for the "should I leave now?" panel:
+// nearest stops + nearest vehicles + which vehicle serves which stop.
+app.get('/api/live/nearby', (req, res) => {
+  const { lat, lng, city, maxDistance } = req.query;
+  if (!lat || !lng) {
+    return res.status(400).json({ success: false, error: 'lat & lng zinahitajika (GPS)' });
+  }
+  const user = [parseFloat(lat), parseFloat(lng)];
+  const radius = maxDistance ? parseFloat(maxDistance) : 2500;
+  const stops = loadData('stops.json') || [];
+  const routes = loadData('routes.json') || [];
+  const vehicles = simulateFleet(city || undefined);
+
+  const nearStops = stops
+    .filter(s => !city || s.cityId === city)
+    .map(s => {
+      const d = getDistanceMeters(user, s.coordinates);
+      return { ...s, distanceMeters: d, walkTimeMinutes: Math.max(1, Math.round(d / 80)) };
+    })
+    .filter(s => s.distanceMeters <= radius)
+    .sort((a, b) => a.distanceMeters - b.distanceMeters)
+    .slice(0, 5);
+
+  // For each near stop, find vehicles on routes serving that stop area.
+  const stopRoutes = {};
+  routes.forEach(r => {
+    (r.stops || []).forEach(rs => { stopRoutes[rs.stopId] = stopRoutes[rs.stopId] || []; stopRoutes[rs.stopId].push(r.id); });
+  });
+
+  const enriched = nearStops.map(stop => {
+    const servingRouteIds = new Set(stopRoutes[stop.id] || stop.routes || []);
+    const serving = vehicles
+      .filter(v => servingRouteIds.has(v.routeId))
+      .map(v => {
+        const d = getDistanceMeters(stop.coordinates, v.coordinates);
+        // ETA ≈ vehicle distance to stop / avg speed (simplified: proportional)
+        const etaMin = Math.max(1, Math.round(d / 350));
+        return { ...v, distanceToStopMeters: d, etaToStopMin: etaMin };
+      })
+      .sort((a, b) => a.etaToStopMin - b.etaToStopMin)
+      .slice(0, 3);
+    return { ...stop, nextVehicles: serving };
+  });
+
+  res.json({ success: true, stops: enriched, simulated: true });
+});
+
 app.post('/api/admin/reports/:id/verify', requireAdmin, (req, res) => {
   const repData = loadData('reports_analytics.json') || { reports: [] };
   const report = repData.reports.find(r => r.id === req.params.id);

@@ -281,6 +281,9 @@
             </button>
           </div>
 
+          <div id="gpsStatusBar" style="display:none; align-items:center; gap:8px; background:#f0fdf4; border:1px solid #bbf7d0; padding:9px 12px; border-radius:12px; font-size:12px; font-weight:600; color:#065f46;"></div>
+          <div id="nearbyVehiclesPanel" style="display:none; background:#fff; border:1px solid var(--border-light); padding:12px; border-radius:12px;"></div>
+
           <div class="audio-toggle-bar">
             <label class="audio-switch-label">
               <input type="checkbox" id="voiceGuidanceCheckbox" checked>
@@ -310,7 +313,7 @@
       <main class="map-viewport">
         <div id="map"></div>
         <div class="map-floating-controls">
-          <button class="btn-floating" onclick="useCurrentGpsLocation()" title="Eneo Langu">&#128205;</button>
+          <button class="btn-floating" id="btnGpsToggle" onclick="useCurrentGpsLocation()" title="Eneo Langu (GPS live)">&#128205;</button>
           <button class="btn-floating" onclick="resetMapView()" title="Onyesha Mji Mzima">&#128506;</button>
           <button class="btn-floating" onclick="toggleSavedActiveRoute()" title="Hifadhi Njia Hii">&#11088;</button>
           <button class="btn-floating" onclick="switchMapTiles()" title="Badili ramani (OSM/CARTO/Topo)">&#128264;</button>
@@ -385,6 +388,7 @@
   <script src="/js/i18n.js"></script>
   <script src="/js/map-service.js"></script>
   <script src="/js/app.js"></script>
+  <script src="/js/live-gps.js"></script>
   <script src="/js/admin-panel.js"></script>
 </body>
 </html>

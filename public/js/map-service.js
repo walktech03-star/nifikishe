@@ -11,6 +11,8 @@ class MapService {
     this.currentCity = 'dar-es-salaam';
     this.center = [-6.816064, 39.280358];
     this.zoom = 13;
+    this.vehicleMarkers = [];
+    this.accuracyCircle = null;
     // Tile providers — tried in order. OSM first because {s}.basemaps.cartocdn.com
     // is blocked on some Tanzanian ISPs/networks (grid with no streets = tiles blocked).
     // OSM tile usage policy: https://operations.osmfoundation.org/policies/tiles/
@@ -110,6 +112,34 @@ class MapService {
     this.map.flyTo(cityObj.center, cityObj.zoom || 13, { duration: 1.2 });
   }
 
+  // Vehicle markers (live fleet)
+  renderVehicles(vehicles) {
+    if (!this.map || typeof L === 'undefined') return;
+    this.clearVehicles();
+    vehicles.forEach(v => {
+      const isBrt = v.transportType === 'brt';
+      const bg = isBrt ? '#2563eb' : '#059669';
+      const icon = isBrt ? '🚍' : '🚌';
+      const markerIcon = L.divIcon({
+        className: 'live-vehicle-marker',
+        html: `<div title="${v.routeSign}" style="background:${bg};color:#fff;min-width:30px;height:30px;padding:0 6px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:15px;border:2px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.4);white-space:nowrap;">${icon}<span style="font-size:10px;font-weight:800;margin-left:3px;">${v.etaToStopMin != null ? v.etaToStopMin + '′' : ''}</span></div>`,
+        iconSize: [34, 30],
+        iconAnchor: [17, 15]
+      });
+      const occ = v.occupancy === 'full' ? '🔴 Imejaa' : v.occupancy === 'seats' ? '🟢 Viti vipo' : '⚪ Tupu';
+      const m = L.marker(v.coordinates, { icon: markerIcon, zIndexOffset: 500 })
+        .addTo(this.map)
+        .bindPopup(`<b>${icon} ${v.routeSign}</b><br><small>→ ${v.destination || ''}</small><br><small>⏱️ ${v.etaToStopMin != null ? 'Dakika ' + v.etaToStopMin + ' hadi kituo' : 'Dakika ' + v.etaToTerminusMin + ' hadi mwisho'}</small><br><small>${occ}</small>`);
+      this.vehicleMarkers.push(m);
+    });
+  }
+
+  clearVehicles() {
+    if (!this.map) return;
+    (this.vehicleMarkers || []).forEach(m => { try { this.map.removeLayer(m); } catch (e) {} });
+    this.vehicleMarkers = [];
+  }
+
   updateUserLocation(latLng, title = "Upo Hapa") {
     if (!this.map || typeof L === 'undefined') return;
 
@@ -126,6 +156,22 @@ class MapService {
       this.userMarker = L.marker(latLng, { icon: userIcon, zIndexOffset: 1000 })
         .addTo(this.map)
         .bindPopup(`<b>${title}</b>`);
+    }
+    return this.userMarker;
+  }
+
+  // Blue accuracy circle like Google Maps (GPS precision indicator).
+  showAccuracyCircle(latLng, accuracyMeters) {
+    if (!this.map || typeof L === 'undefined') return;
+    if (this.accuracyCircle) {
+      this.accuracyCircle.setLatLng(latLng);
+      this.accuracyCircle.setRadius(Math.min(500, accuracyMeters || 50));
+    } else {
+      this.accuracyCircle = L.circle(latLng, {
+        radius: Math.min(500, accuracyMeters || 50),
+        color: '#2563eb', weight: 1, opacity: 0.4,
+        fillColor: '#2563eb', fillOpacity: 0.12
+      }).addTo(this.map);
     }
   }
 
