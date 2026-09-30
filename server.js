@@ -199,7 +199,7 @@ app.post('/api/navigation/search', (req, res) => {
       {
         stepNumber: 1,
         mode: 'walking',
-        icon: '🚶',
+        code: 'T',
         title: 'Tembea kuelekea kituo',
         instruction: `Tembea mita ${primaryBoarding.distMeters || 350} kuelekea kituo cha ${primaryBoarding.name}`,
         distanceMeters: primaryBoarding.distMeters || 350,
@@ -210,7 +210,7 @@ app.post('/api/navigation/search', (req, res) => {
       {
         stepNumber: 2,
         mode: route.transportType,
-        icon: route.transportType === 'brt' ? '🚍' : '🚌',
+        code: route.transportType === 'brt' ? 'R' : 'B',
         title: 'Panda usafiri',
         instruction: `Panda ${route.transportType.toUpperCase()} (${route.name})`,
         routeId: route.id,
@@ -228,14 +228,14 @@ app.post('/api/navigation/search', (req, res) => {
       {
         stepNumber: 3,
         mode: 'stay_on_board',
-        icon: '🛑',
+        code: 'K',
         title: 'Kaa kwenye safari',
         instruction: `Endelea kwenye basi kupitia vituo ${route.stops.length} hadi shuka kituo cha ${route.stops[route.stops.length - 1].name}`
       },
       {
         stepNumber: 4,
         mode: 'alight',
-        icon: '🚏',
+        code: 'S',
         title: 'Shuka hapa',
         instruction: `Shuka kwenye kituo cha ${route.stops[route.stops.length - 1].name}`,
         targetStop: route.stops[route.stops.length - 1].name
@@ -243,7 +243,7 @@ app.post('/api/navigation/search', (req, res) => {
       {
         stepNumber: 5,
         mode: 'walking',
-        icon: '🚶',
+        code: 'T',
         title: 'Tembea hadi unakokwenda',
         instruction: `Tembea mita ${finalWalkMeters} kuelekea ${destination.name || 'eneo lako'}`,
         distanceMeters: finalWalkMeters,
@@ -663,11 +663,112 @@ function simulateFleet(cityId) {
   return vehicles;
 }
 
-// GET /api/live/vehicles — fleet positions, optionally with distance to user
+// ---------------------------------------------------------------------------
+// REAL DRIVER INGEST — phones of drivers/conductors stream GPS here.
+// A driver opens /driver.html, picks their route, hits Start. The phone POSTs
+// every ~10s. Passengers see real buses via /api/live/vehicles (real first,
+// simulated fill-in for routes with no driver online).
+// In-memory store: fine for prototype. Migrate to Redis/Postgres for scale.
+// ---------------------------------------------------------------------------
+const liveFleet = new Map(); // vehicleId -> { vehicleId, routeId, coordinates, ... }
+const DRIVER_KEY = process.env.DRIVER_KEY || '';
+
+function requireDriver(req, res, next) {
+  if (!DRIVER_KEY) return next();
+  if (req.headers['x-driver-key'] === DRIVER_KEY) return next();
+  return res.status(401).json({ success: false, error: 'Huna ruhusa (driver key)' });
+}
+
+function fleetFreshnessMs() {
+  return 120000; // positions older than 2 min are stale
+}
+
+function getFreshFleet() {
+  const cutoff = Date.now() - fleetFreshnessMs();
+  const fresh = [];
+  for (const [id, v] of liveFleet) {
+    if (v.updatedAtMs >= cutoff) fresh.push(v);
+    else liveFleet.delete(id);
+  }
+  return fresh;
+}
+
+function enrichVehicle(v, routeById) {
+  const route = routeById[v.routeId];
+  const transportType = v.transportType || (route && route.transportType) || 'daladala';
+  return {
+    id: v.vehicleId,
+    routeId: v.routeId,
+    routeName: (route && route.name) || v.routeName || v.routeId,
+    transportType,
+    routeSign: (route && route.routeSign) || v.routeSign || v.routeId,
+    coordinates: v.coordinates,
+    heading: v.heading || 'outbound',
+    destination: v.destination || (route && route.destinationArea) || '',
+    speedKph: v.speedKph ?? null,
+    occupancy: v.occupancy || 'unknown',
+    driverName: v.driverName || '',
+    updatedAt: new Date(v.updatedAtMs).toISOString(),
+    updatedSecondsAgo: Math.round((Date.now() - v.updatedAtMs) / 1000),
+    real: true
+  };
+}
+
+// POST /api/live/ingest — driver phone streams position
+app.post('/api/live/ingest', requireDriver, (req, res) => {
+  const { vehicleId, routeId, lat, lng, speedKph, heading, occupancy, driverName } = req.body || {};
+  if (!vehicleId || !routeId) {
+    return res.status(400).json({ success: false, error: 'vehicleId na routeId vinahitajika' });
+  }
+  const latN = parseFloat(lat);
+  const lngN = parseFloat(lng);
+  if (Number.isNaN(latN) || Number.isNaN(lngN) || latN < -90 || latN > 90 || lngN < -180 || lngN > 180) {
+    return res.status(400).json({ success: false, error: 'lat/lng si sahihi' });
+  }
+  const routes = loadData('routes.json') || [];
+  if (!routes.some(r => r.id === routeId)) {
+    return res.status(404).json({ success: false, error: 'routeId haijapatikana' });
+  }
+  liveFleet.set(String(vehicleId), {
+    vehicleId: String(vehicleId),
+    routeId: String(routeId),
+    coordinates: [latN, lngN],
+    speedKph: speedKph != null ? parseFloat(speedKph) : null,
+    heading: heading === 'inbound' ? 'inbound' : 'outbound',
+    occupancy: ['empty', 'seats', 'full'].includes(occupancy) ? occupancy : 'unknown',
+    driverName: String(driverName || '').slice(0, 40),
+    destination: '',
+    updatedAtMs: Date.now()
+  });
+  res.json({ success: true, message: 'Eneo limepokelewa', vehicleId: String(vehicleId) });
+});
+
+// POST /api/live/stop — driver goes offline
+app.post('/api/live/stop', requireDriver, (req, res) => {
+  const { vehicleId } = req.body || {};
+  if (vehicleId && liveFleet.has(String(vehicleId))) liveFleet.delete(String(vehicleId));
+  res.json({ success: true, message: 'Umeacha kushiriki eneo' });
+});
+// GET /api/live/vehicles — REAL driver positions first, simulated fill-in
+// for routes with no driver online (so the map never looks empty).
 app.get('/api/live/vehicles', (req, res) => {
   const { city, routeId, lat, lng, maxDistance } = req.query;
-  let vehicles = simulateFleet(city || undefined);
-  if (routeId) vehicles = vehicles.filter(v => v.routeId === routeId);
+  const routes = loadData('routes.json') || [];
+  const routeById = {};
+  routes.forEach(r => { routeById[r.id] = r; });
+
+  const fresh = getFreshFleet().filter(v => {
+    const r = routeById[v.routeId];
+    return (!city || (r && r.cityId === city)) && (!routeId || v.routeId === routeId);
+  });
+  const realVehicles = fresh.map(v => enrichVehicle(v, routeById));
+
+  const coveredRoutes = new Set(realVehicles.map(v => v.routeId));
+  let simVehicles = simulateFleet(city || undefined)
+    .filter(v => !coveredRoutes.has(v.routeId))
+    .filter(v => !routeId || v.routeId === routeId);
+
+  let vehicles = [...realVehicles, ...simVehicles];
   if (lat && lng) {
     const user = [parseFloat(lat), parseFloat(lng)];
     const radius = maxDistance ? parseFloat(maxDistance) : 5000;
@@ -677,7 +778,13 @@ app.get('/api/live/vehicles', (req, res) => {
     }).filter(v => v.distanceMeters <= radius)
       .sort((a, b) => a.distanceMeters - b.distanceMeters);
   }
-  res.json({ success: true, count: vehicles.length, vehicles, simulated: true });
+  res.json({
+    success: true,
+    count: vehicles.length,
+    vehicles,
+    realCount: realVehicles.length,
+    simulated: simVehicles.length > 0
+  });
 });
 
 // GET /api/live/nearby — one call for the "should I leave now?" panel:
@@ -691,7 +798,16 @@ app.get('/api/live/nearby', (req, res) => {
   const radius = maxDistance ? parseFloat(maxDistance) : 2500;
   const stops = loadData('stops.json') || [];
   const routes = loadData('routes.json') || [];
-  const vehicles = simulateFleet(city || undefined);
+  const routeById = {};
+  routes.forEach(r => { routeById[r.id] = r; });
+  const realByRoute = {};
+  getFreshFleet().forEach(v => {
+    if (city && routeById[v.routeId] && routeById[v.routeId].cityId !== city) return;
+    const ev = enrichVehicle(v, routeById);
+    realByRoute[v.routeId] = realByRoute[v.routeId] || [];
+    realByRoute[v.routeId].push(ev);
+  });
+  const simVehicles = simulateFleet(city || undefined);
 
   const nearStops = stops
     .filter(s => !city || s.cityId === city)
@@ -711,20 +827,36 @@ app.get('/api/live/nearby', (req, res) => {
 
   const enriched = nearStops.map(stop => {
     const servingRouteIds = new Set(stopRoutes[stop.id] || stop.routes || []);
-    const serving = vehicles
-      .filter(v => servingRouteIds.has(v.routeId))
+    // REAL vehicles serving this stop first…
+    const realServing = [];
+    servingRouteIds.forEach(rid => {
+      (realByRoute[rid] || []).forEach(v => {
+        const d = getDistanceMeters(stop.coordinates, v.coordinates);
+        realServing.push({ ...v, distanceToStopMeters: d, etaToStopMin: Math.max(1, Math.round(d / 350)) });
+      });
+    });
+    // …then simulated fill-in on routes with no driver online.
+    const covered = new Set(realServing.map(v => v.routeId));
+    const simServing = simVehicles
+      .filter(v => servingRouteIds.has(v.routeId) && !covered.has(v.routeId))
       .map(v => {
         const d = getDistanceMeters(stop.coordinates, v.coordinates);
         // ETA ≈ vehicle distance to stop / avg speed (simplified: proportional)
         const etaMin = Math.max(1, Math.round(d / 350));
         return { ...v, distanceToStopMeters: d, etaToStopMin: etaMin };
-      })
+      });
+    const serving = [...realServing, ...simServing]
       .sort((a, b) => a.etaToStopMin - b.etaToStopMin)
       .slice(0, 3);
     return { ...stop, nextVehicles: serving };
   });
 
-  res.json({ success: true, stops: enriched, simulated: true });
+  res.json({
+    success: true,
+    stops: enriched,
+    realCount: Object.values(realByRoute).reduce((n, a) => n + a.length, 0),
+    simulated: true
+  });
 });
 
 app.post('/api/admin/reports/:id/verify', requireAdmin, (req, res) => {
@@ -754,8 +886,8 @@ app.use((req, res, next) => {
 
 if (require.main === module) {
   app.listen(PORT, () => {
-    console.log(`🧭 NIFIKISHE Platform Engine Running on port ${PORT}`);
-    console.log(`📍 Tagline: Kutoka ulipo, hadi unakokwenda.`);
+    console.log(`NIFIKISHE Platform Engine Running on port ${PORT}`);
+    console.log(`Tagline: Kutoka ulipo, hadi unakokwenda.`);
   });
 }
 

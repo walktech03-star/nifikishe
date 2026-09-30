@@ -2,7 +2,7 @@
   "categories": [
     {
       "id": "phones",
-      "icon": "📱",
+      "code": "SM",
       "swName": "Simu na Vifaa vya Simu",
       "enName": "Phones & Accessories",
       "street": "Aggrey & Msimbazi Street",
@@ -17,7 +17,7 @@
     },
     {
       "id": "computers",
-      "icon": "💻",
+      "code": "PC",
       "swName": "Kompyuta & Tehama",
       "enName": "Computers & IT",
       "street": "Congo & Livingstone Street",
@@ -32,7 +32,7 @@
     },
     {
       "id": "clothes",
-      "icon": "👕",
+      "code": "NG",
       "swName": "Nguo, Vitenge & Mitumba",
       "enName": "Garments & Textiles",
       "street": "Livingstone & Swahili Street",
@@ -46,7 +46,7 @@
     },
     {
       "id": "shoes",
-      "icon": "👟",
+      "code": "VT",
       "swName": "Viatu vya Kiume na Kike",
       "enName": "Footwear & Shoes",
       "street": "Nyamwezi & Mkunguni Street",
@@ -60,7 +60,7 @@
     },
     {
       "id": "hardware",
-      "icon": "🔧",
+      "code": "HW",
       "swName": "Hardware & Vifaa vya Ujenzi",
       "enName": "Hardware & Tools",
       "street": "Swahili & Sikukuu Street",
@@ -74,7 +74,7 @@
     },
     {
       "id": "spareparts",
-      "icon": "🚗",
+      "code": "SP",
       "swName": "Spea za Magari & Bajaji",
       "enName": "Auto Spare Parts",
       "street": "Tandamti & Gerezani Street",
@@ -88,7 +88,7 @@
     },
     {
       "id": "food",
-      "icon": "🍎",
+      "code": "CK",
       "swName": "Chakula, Nafaka & Matunda",
       "enName": "Fresh Foods & Produce",
       "street": "Soko Kuu la Kariakoo (Hall)",
@@ -102,7 +102,7 @@
     },
     {
       "id": "wholesale",
-      "icon": "🏪",
+      "code": "JM",
       "swName": "Maduka ya Jumla (Wholesale)",
       "enName": "Wholesale Plazas",
       "street": "Mchikichi & Aggrey Street",

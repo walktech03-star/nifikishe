@@ -166,7 +166,7 @@ function resetMapView() {
   }
 }
 
-// Manual tile-provider switch (map style button 🔃 on the map).
+// Manual tile-provider switch (map style button on the map).
 function switchMapTiles() {
   if (!mapService || !mapService.map) {
     alert("Ramani bado inapakiwa — subiri sekunde chache kisha jaribu tena.");
@@ -202,7 +202,7 @@ function setupAutocomplete(inputId, dropdownId, onSelect) {
         if (data.results && data.results.length > 0) {
           dropdown.innerHTML = data.results.map(item => `
             <div class="autocomplete-item" onclick='handleSelectAutocomplete("${inputId}", ${JSON.stringify(item)})'>
-              <span>${item.type === 'stop' ? '🚏' : item.type === 'route' ? '🚌' : '📍'}</span>
+              <span class="t-badge">${item.type === 'stop' ? 'S' : item.type === 'route' ? 'R' : 'P'}</span>
               <div>
                 <div class="item-title">${item.title}</div>
                 <div class="item-sub">${item.subtitle || ''}</div>
@@ -244,9 +244,9 @@ window.handleSelectAutocomplete = function(inputId, item) {
 async function performJourneySearch() {
   const btn = document.getElementById('btnNifikishe');
   const loadingLabel = window.i18n.currentLang === 'sw' ? 'Inatafuta njia bora...' : 'Finding the best routes...';
-  btn.innerHTML = `<span>⏳ ${loadingLabel}</span>`;
+  btn.innerHTML = `<span>${loadingLabel}</span>`;
   const resetBtnLabel = () => {
-    btn.innerHTML = '<span style="font-size: 18px;">🧭</span> <span>' + window.i18n.t('ctaNifikishe') + '</span>';
+    btn.innerHTML = '<span>' + window.i18n.t('ctaNifikishe') + '</span>';
   };
 
   try {
@@ -286,7 +286,7 @@ function renderRouteCards(journeys) {
 
   list.innerHTML = journeys.map(j => {
     const badgeColor = j.transportType === 'brt' ? '#2563eb' : '#059669';
-    const badgeIcon = j.transportType === 'brt' ? '🚍 BRT Mwendokasi' : '🚌 Daladala';
+    const badgeIcon = j.transportType === 'brt' ? 'BRT Mwendokasi' : 'Daladala';
 
     return `
       <div class="route-card" id="card_${j.id}" onclick="viewJourneyDetail('${j.id}')">
@@ -303,11 +303,11 @@ function renderRouteCards(journeys) {
         <div class="route-card-body">
           <div class="route-title">${j.title}</div>
           <div class="route-metrics-row">
-            <span class="route-metric-pill">🚶 ${j.walkingMinutesTotal} ${window.i18n.currentLang === 'sw' ? 'dakika tembea' : 'min walk'}</span>
+            <span class="route-metric-pill">${j.walkingMinutesTotal} ${window.i18n.currentLang === 'sw' ? 'dakika tembea' : 'min walk'}</span>
             <span>•</span>
-            <span class="route-metric-pill">🔄 ${j.transfersCount === 0 ? (window.i18n.currentLang === 'sw' ? 'Moja kwa Moja' : 'Direct') : j.transfersCount + (window.i18n.currentLang === 'sw' ? ' badilisha' : ' transfer')}</span>
+            <span class="route-metric-pill">${j.transfersCount === 0 ? (window.i18n.currentLang === 'sw' ? 'Moja kwa Moja' : 'Direct') : j.transfersCount + (window.i18n.currentLang === 'sw' ? ' badilisha' : ' transfer')}</span>
             <span>•</span>
-            <span class="route-metric-pill">💰 TSh ${j.fareEstimatedTsh.toLocaleString()}</span>
+            <span class="route-metric-pill">TSh ${j.fareEstimatedTsh.toLocaleString()}</span>
           </div>
         </div>
 
@@ -342,12 +342,12 @@ function viewJourneyDetail(journeyId) {
           <div style="font-size: 11px; color: #94a3b8;">${journey.englishTitle}</div>
         </div>
         <button class="btn-nifikishe" style="width:auto; padding:8px 16px; font-size:13px;" onclick="startLiveJourneyMode('${journey.id}')">
-          ▶️ ${window.i18n.t('startJourney')}
+          ${window.i18n.t('startJourney')}
         </button>
       </div>
 
       <div class="vehicle-identity-box">
-        <div class="vehicle-identity-title">🔍 ${window.i18n.t('lookForVehicle')}</div>
+        <div class="vehicle-identity-title">${window.i18n.t('lookForVehicle')}</div>
         ${journey.vehicle && journey.vehicle.image ? '<img src="' + journey.vehicle.image + '" alt="Gari la Usafiri" class="vehicle-preview-img">' : ''}
         <div style="font-size: 13px; font-weight: 600; color: #78350f;">
           Basi: <strong>${journey.vehicle.type}</strong> (${journey.vehicle.color})
@@ -359,7 +359,7 @@ function viewJourneyDetail(journeyId) {
           </div>
         </div>
         <div class="ask-conductor-pill">
-          <span>🗣️ ${window.i18n.t('askConductor')} </span>
+          <span>${window.i18n.t('askConductor')} </span>
           <strong>"${journey.conductorAsk}"</strong>
         </div>
       </div>
@@ -368,15 +368,15 @@ function viewJourneyDetail(journeyId) {
         ${journey.steps.map(step => `
           <div class="step-node">
             <div class="step-icon-wrap" style="background:#f1f5f9; border: 1.5px solid #cbd5e1;">
-              ${step.icon}
+              <span class="step-code">${step.code||""}</span>
             </div>
             <div class="step-content">
               <span class="step-tag">${step.title}</span>
               <div class="step-instruction">${step.instruction}</div>
-              ${step.mode === 'walking' ? `<div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">⏱️ Dakika ${step.timeMinutes} (${step.distanceMeters}m)</div>` : ''}
+              ${step.mode === 'walking' ? `<div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Dakika ${step.timeMinutes} (${step.distanceMeters}m)</div>` : ''}
               ${step.intermediateStops ? `
                 <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px; background: #f8fafc; padding: 6px 10px; border-radius: 6px;">
-                  🚏 <strong>Vituo ${step.intermediateStops.length}:</strong> ${step.intermediateStops.slice(0, 4).join(' ➔ ')} ... ➔ ${step.dropOffStop}
+                  <strong>Vituo ${step.intermediateStops.length}:</strong> ${step.intermediateStops.slice(0, 4).join(' ➔ ')} ... ➔ ${step.dropOffStop}
                 </div>
               ` : ''}
             </div>
@@ -419,21 +419,21 @@ function startLiveJourneyMode(journeyId) {
     const isApproaching = currIndex >= coords.length - 2 && currIndex < coords.length - 1;
     const isDropOff = currIndex === coords.length - 1;
 
-    let bannerStatus = `🚌 ${window.i18n.t('onBoard')}`;
+    let bannerStatus = `${window.i18n.t('onBoard')}`;
     let subStatus = `Kituo kinachofuata: Ubungo Interchange`;
 
     if (isStarting) {
-      bannerStatus = `🚶 Tembea kuelekea kituo cha Mbezi Mwisho`;
+      bannerStatus = `Tembea kuelekea kituo cha Mbezi Mwisho`;
       subStatus = `Mita 350 zimebaki kabla ya kupanda`;
     } else if (isMidway) {
-      bannerStatus = `🚌 Safari inaendelea vizuri kwenye Morogoro Rd`;
+      bannerStatus = `Safari inaendelea vizuri kwenye Morogoro Rd`;
       subStatus = `Vituo 4 vimebaki kuelekea Kariakoo`;
     } else if (isApproaching) {
-      bannerStatus = `🔔 ${window.i18n.t('approachingDest')}`;
+      bannerStatus = `${window.i18n.t('approachingDest')}`;
       subStatus = `Jiandae kusimama, kituo kinachofuata ni Kariakoo!`;
       speakInstruction("Tahadhari. Karibu kufika Kariakoo. Jiandae kushuka.");
     } else if (isDropOff) {
-      bannerStatus = `🛑 ${window.i18n.t('alightHere')}`;
+      bannerStatus = `${window.i18n.t('alightHere')}`;
       subStatus = `Shuka kwenye kituo cha Kariakoo Msimbazi!`;
     }
 
@@ -477,7 +477,7 @@ async function showArrivalAndComplexArea() {
     container.innerHTML = `
       <div class="complex-area-card">
         <div class="complex-area-title">
-          <span>🏪</span>
+          <span></span>
           <span>${window.i18n.t('complexAreaTitle')}</span>
         </div>
         <p style="font-size: 12px; color: #94a3b8; line-height: 1.4;">
@@ -487,7 +487,7 @@ async function showArrivalAndComplexArea() {
         <div class="complex-categories-grid">
           ${data.categories.map(cat => `
             <button class="complex-category-btn" onclick='navigateInsideComplexArea(${JSON.stringify(cat)})'>
-              <span>${cat.icon}</span>
+              <span class="cat-code">${cat.code||""}</span>
               <span>${cat.swName.split(' ')[0]}</span>
             </button>
           `).join('')}
@@ -510,11 +510,11 @@ window.navigateInsideComplexArea = function(category) {
   container.innerHTML = `
     <div class="complex-area-card" style="background:#064e3b;">
       <div class="complex-area-title">
-        <span>${category.icon}</span>
+        <span class="cat-code">${category.code||""}</span>
         <span>${category.swName}</span>
       </div>
       <div style="font-size: 12px; color: #a7f3d0; font-weight: 600;">
-        📍 Eneo: ${category.street} (Kutembea ~${Math.round(category.walkingSecondsFromMsimbazi / 60)} min)
+        Eneo: ${category.street} (Kutembea ~${Math.round(category.walkingSecondsFromMsimbazi / 60)} min)
       </div>
 
       <div style="background: rgba(0,0,0,0.25); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
@@ -528,7 +528,7 @@ window.navigateInsideComplexArea = function(category) {
       </div>
 
       <button class="btn-nifikishe" style="margin-top: 10px; background: #ffffff; color: #064e3b;" onclick="showArrivalCelebration()">
-        🎉 UMEFIKA KWENYE DUKA
+        UMEFIKA KWENYE DUKA
       </button>
     </div>
   `;
@@ -538,13 +538,13 @@ function showArrivalCelebration() {
   const container = document.getElementById('complexAreaContainer');
   container.innerHTML = `
     <div style="background: linear-gradient(135deg, #059669 0%, #047857 100%); color: white; padding: 24px; border-radius: var(--radius-lg); text-align: center; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow-floating);">
-      <div style="font-size: 40px;">🎉</div>
+      <div style="font-size: 40px;"></div>
       <h2 style="font-size: 22px; font-weight: 800;">${window.i18n.t('arrived')}</h2>
       <p style="font-size: 13px; color: #d1fae5;">
         Umefika salama unakokwenda kwa usaidizi wa NIFIKISHE!
       </p>
       <button class="btn-view-route" style="background: white; color: #047857; margin-top: 8px;" onclick="showAppView(); performJourneySearch();">
-        🧭 Anzisha Safari Nyingine
+        Anzisha Safari Nyingine
       </button>
     </div>
   `;
@@ -672,7 +672,7 @@ function toggleSavedActiveRoute() {
       dest: userDestination.name,
       fare: activeJourney.fareEstimatedTsh
     });
-    alert("Safari imehifadhiwa! ⭐");
+    alert("Safari imehifadhiwa! *");
   }
 
   persistSavedTrips();
@@ -684,7 +684,7 @@ function openSavedRoutesModal() {
   modal.style.display = 'flex';
 
   if (savedTrips.length === 0) {
-    container.innerHTML = "<p style=\"font-size: 13px; color: var(--text-muted);\">Bado hujaziweka njia zako unazozitumia mara kwa mara. Tumia kitufe cha ⭐ kwenye ramani kuhifadhi safari.</p>";
+    container.innerHTML = "<p style=\"font-size: 13px; color: var(--text-muted);\">Bado hujaziweka njia zako unazozitumia mara kwa mara. Tumia kitufe cha * kwenye ramani kuhifadhi safari.</p>";
     return;
   }
 
@@ -694,7 +694,7 @@ function openSavedRoutesModal() {
         <div style="font-weight:700; font-size:14px;">${t.origin} ➔ ${t.dest}</div>
         <div style="font-size:12px; color:#64748b;">${t.title} • TSh ${t.fare}</div>
       </div>
-      <button class="btn-subtle" onclick="loadSavedJourney('${t.origin}', '${t.dest}')">🧭 Enda</button>
+      <button class="btn-subtle" onclick="loadSavedJourney('${t.origin}', '${t.dest}')">Enda</button>
     </div>
   `).join('');
 }

@@ -53,8 +53,21 @@ npm run verify:live     # the above + smoke test every route/asset against a run
 | POST | `/api/navigation/search` | Journey search (`origin`, `destination`, `city`, `sortBy`) |
 | GET | `/api/complex-areas/:areaId` | Internal micro-navigation for a market/commercial zone |
 | GET | `/api/search?q=` | Unified ranked search across places, stops and routes |
+| GET | `/api/live/vehicles` | Fleet positions — REAL drivers first, simulated fill-in (`realCount`, `real`, `updatedSecondsAgo`) |
+| GET | `/api/live/nearby` | Nearest stops × next vehicles with ETAs (marks `real` live buses) |
+| POST | `/api/live/ingest` | Driver GPS ingest (`vehicleId`, `routeId`, `lat`, `lng`, `speedKph`, `heading`, `occupancy`) |
+| POST | `/api/live/stop` | Driver goes offline (removes vehicle) |
 | POST | `/api/reports` | Submit a crowdsourced transit report |
 | GET | `/api/admin/overview` | Platform statistics and analytics |
+
+## Driver live tracking (`/driver.html`)
+
+A driver opens `/driver.html` on a phone, picks their route, and taps Start.
+The phone posts GPS to `POST /api/live/ingest` every 10 seconds; passengers
+see those real vehicles first via `GET /api/live/vehicles` and
+`GET /api/live/nearby` (routes with no driver online still show a scheduled
+fill-in so the map never looks empty). `POST /api/live/stop` takes a driver
+offline. Set an optional shared `DRIVER_KEY` env var to protect ingest.
 
 ## Layout
 
@@ -66,6 +79,9 @@ public/
   js/app.js          app orchestrator: search, routes, simulation, saved trips
   js/i18n.js         Swahili/English dictionary and language switching
   js/map-service.js  map provider abstraction (Leaflet today)
+   js/live-gps.js     passenger live GPS follow + nearby-vehicle panel
+   js/driver.js       driver phone GPS streaming (/driver.html)
+   js/admin-panel.js  admin data-entry panel (routes, stops, reports)
   images/            vehicle illustrations (daladala, BRT)
   icons/             app icon
 server.js            Express API + static hosting

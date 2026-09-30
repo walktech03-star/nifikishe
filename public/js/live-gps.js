@@ -36,14 +36,14 @@ function toggleLiveGps() {
   });
   gpsActive = true;
   const btn = document.getElementById('btnGpsToggle');
-  if (btn) { btn.classList.add('gps-on'); btn.innerHTML = '⏹'; btn.title = 'Zima GPS'; }
+  if (btn) { btn.classList.add('gps-on'); btn.innerHTML = 'STOP'; btn.title = 'Zima GPS'; }
 }
 function stopLiveGps() {
   if (gpsWatchId != null) { try { navigator.geolocation.clearWatch(gpsWatchId); } catch (e) {} }
   gpsWatchId = null; gpsActive = false;
   if (liveRefreshTimer) { clearInterval(liveRefreshTimer); liveRefreshTimer = null; }
   const btn = document.getElementById('btnGpsToggle');
-  if (btn) { btn.classList.remove('gps-on'); btn.innerHTML = '📍'; btn.title = 'Eneo Langu (GPS live)'; }
+  if (btn) { btn.classList.remove('gps-on'); btn.innerHTML = ''; btn.title = 'Eneo Langu (GPS live)'; }
   setGpsStatus('GPS imezimwa.', false);
 }
 function onGpsFix(pos) {
@@ -52,7 +52,7 @@ function onGpsFix(pos) {
   userOrigin = { name: 'Eneo Langu la Sasa (GPS)', coordinates: latLng };
   const oi = document.getElementById('originInput');
   if (oi) oi.value = userOrigin.name;
-  mapService.updateUserLocation(latLng, 'Wewe Upo Hapa 📍');
+  mapService.updateUserLocation(latLng, 'Wewe Upo Hapa ');
   mapService.showAccuracyCircle(latLng, pos.coords.accuracy || 60);
   mapService.panToUser();
   setGpsStatus('GPS live ±' + Math.round(pos.coords.accuracy || 60) + 'm — magari ya karibu yanafuatiliwa', true);
@@ -90,17 +90,18 @@ function renderNearbyPanel(stops) {
     return;
   }
   panel.style.display = 'block';
-  panel.innerHTML = '<div style="font-size:12px;font-weight:800;margin-bottom:8px;">🚌 Magari ya Karibu — toka sasa ili usisubiri</div>' + stops.slice(0, 3).map(s => {
+  panel.innerHTML = '<div style="font-size:12px;font-weight:800;margin-bottom:8px;">Magari ya Karibu — toka sasa ili usisubiri</div>' + stops.slice(0, 3).map(s => {
     const v = (s.nextVehicles || [])[0];
     let advice, color;
     if (!v) { advice = 'Hakuna gari linalokuja — subiri au chagua njia nyingine'; color = '#64748b'; }
-    else if (v.etaToStopMin <= (s.walkTimeMinutes || 5)) { advice = '🏃 HARAKA! Gari linakaribia — nenda kituoni sasa'; color = '#dc2626'; }
-    else if (v.etaToStopMin - (s.walkTimeMinutes || 5) <= 5) { advice = '🚶 Toka sasa — utafika kabla ya gari'; color = '#059669'; }
-    else { advice = '☕ Una dakika ' + (v.etaToStopMin - (s.walkTimeMinutes || 5)) + ' — usikimbie'; color = '#2563eb'; }
+    else if (v.etaToStopMin <= (s.walkTimeMinutes || 5)) { advice = 'HARAKA! Gari linakaribia — nenda kituoni sasa'; color = '#dc2626'; }
+    else if (v.etaToStopMin - (s.walkTimeMinutes || 5) <= 5) { advice = 'Toka sasa — utafika kabla ya gari'; color = '#059669'; }
+    else { advice = ' Una dakika ' + (v.etaToStopMin - (s.walkTimeMinutes || 5)) + ' — usikimbie'; color = '#2563eb'; }
     return '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px;margin-bottom:8px;">'
-      + '<div style="font-weight:700;font-size:13px;">📍 ' + String(s.name).replace(/</g, '&lt;') + '</div>'
-      + '<div style="font-size:11px;color:#64748b;">🚶 dakika ' + (s.walkTimeMinutes || '?') + ' kwa miguu (' + Math.round(s.distanceMeters) + 'm)</div>'
-      + (v ? '<div style="font-size:12px;margin-top:4px;">🚌 <b>' + String(v.routeSign).replace(/</g, '&lt;') + '</b> → ' + String(v.destination || '').replace(/</g, '&lt;') + ' — <b>' + v.etaToStopMin + '′</b></div>' : '<div style="font-size:12px;margin-top:4px;">Hakuna gari linalofuatiliwa kwenye njia hii</div>')
-      + '<div style="font-size:12px;font-weight:700;color:' + color + ';margin-top:4px;">' + advice + '</div></div>';
+      + '<div style="font-weight:700;font-size:13px;"> ' + String(s.name).replace(/</g, '&lt;') + '</div>'
+      + '<div style="font-size:11px;color:#64748b;">dakika ' + (s.walkTimeMinutes || '?') + ' kwa miguu (' + Math.round(s.distanceMeters) + 'm)</div>'
+      + (v ? '<div style="font-size:12px;margin-top:4px;"><b>' + String(v.routeSign).replace(/</g, '&lt;') + '</b> → ' + String(v.destination || '').replace(/</g, '&lt;') + ' — <b>' + v.etaToStopMin + '′</b></div>' : '<div style="font-size:12px;margin-top:4px;">Hakuna gari linalofuatiliwa kwenye njia hii</div>')
+      + '<div style="font-size:12px;font-weight:700;color:' + color + ';margin-top:4px;">' + advice + '</div>'
+      + (v && v.real ? '<div style="font-size:11px;color:#059669;font-weight:800;">LIVE — gari halisi (sek ' + (v.updatedSecondsAgo || 0) + ' zilizopita)</div>' : (v ? '<div style="font-size:11px;color:#64748b;">Mfano wa ratiba (hakuna dereva live)</div>' : '')) + '</div>';
   }).join('');
 }

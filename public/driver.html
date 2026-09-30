@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>NIFIKISHE Driver — Shiriki Eneo la Gari</title>
+  <meta name="theme-color" content="#059669">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" type="image/svg+xml" href="/icons/icon-512.svg">
+  <style>
+    .driver-wrap { max-width: 560px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+    .driver-hero { background: linear-gradient(135deg,#059669,#047857); color: #fff; border-radius: 16px; padding: 20px; }
+    .driver-hero h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: .5px; }
+    .driver-hero p { margin: 0; font-size: 13px; opacity: .9; }
+    .driver-card { background: #fff; border: 1px solid var(--border-light); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+    .driver-status { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #94a3b8; }
+    .dot.live { background: #059669; animation: pulse-ring 2s infinite; }
+    .driver-big-btn { font-size: 17px; padding: 16px; }
+    .driver-big-btn.stop { background: linear-gradient(135deg,#dc2626,#991b1b); box-shadow: 0 8px 20px rgba(220,38,38,.35); }
+    .stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+    .stat-grid .stat { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; text-align: center; }
+    .stat-grid .stat b { font-size: 16px; display: block; }
+    .stat-grid .stat span { font-size: 10px; color: #64748b; }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <div class="brand-wrapper" onclick="location.href='/'">
+        <div class="brand-icon"><img src="/icons/icon-512.svg" alt="N" style="width:28px;height:28px;border-radius:6px;"></div>
+        <div class="brand-text"><h1>NIFIKISHE</h1><span class="brand-tagline">Dereva — Shiriki Eneo</span></div>
+      </div>
+      <div class="header-actions">
+        <button class="btn-header-action" onclick="location.href='/?mode=app'"><span class="tz-badge">MAP</span><span class="action-text">Ramani</span></button>
+      </div>
+    </header>
+
+    <div class="driver-wrap">
+      <div class="driver-hero">
+        <h1>Driver Live Sharing</h1>
+        <p>Chagua njia yako, bonyeza ANZA — abiria wataona gari lako kwenye ramani kwa wakati halisi.</p>
+      </div>
+
+      <div class="driver-card">
+        <div class="driver-status"><span class="dot" id="drvDot"></span><span id="drvStatusText">Uko offline — abiria hawakuoni</span></div>
+        <label class="form-label">Jina lako / namba ya gari</label>
+        <input id="drvName" class="form-control" placeholder="mfano: Juma — T123 ABC">
+        <label class="form-label">Njia unayoendesha *</label>
+        <select id="drvRoute" class="form-control"><option value="">Inapakia njia…</option></select>
+        <label class="form-label">Mwelekeo</label>
+        <select id="drvHeading" class="form-control">
+          <option value="outbound">Kwenda mwisho (outbound)</option>
+          <option value="inbound">Kurudi mwanzo (inbound)</option>
+        </select>
+        <label class="form-label">Hali ya viti</label>
+        <select id="drvOccupancy" class="form-control">
+          <option value="seats">Viti vipo</option>
+          <option value="empty">Gari tupu</option>
+          <option value="full">Imejaa</option>
+        </select>
+        <button id="drvToggleBtn" class="btn-nifikishe driver-big-btn" onclick="driverToggle()">ANZA KUSHIRIKI ENEO</button>
+        <div class="stat-grid">
+          <div class="stat"><b id="drvSent">0</b><span>Tumwa</span></div>
+          <div class="stat"><b id="drvAcc">—</b><span>Usahihi GPS</span></div>
+          <div class="stat"><b id="drvSpeed">—</b><span>km/h</span></div>
+        </div>
+        <div id="drvLog" style="font-size:12px;color:#64748b;">GPS haijawashwa bado.</div>
+      </div>
+
+      <div class="driver-card">
+        <b style="font-size:13px;">Muhimu kwa madereva</b>
+        <ul style="font-size:12px;color:#475569;margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;">
+          <li>Weka simu sehemu salama — usishike simu ukiendesha.</li>
+          <li>Inatuma eneo kila sekunde 10. Kaa na data + GPS zimewashwa.</li>
+          <li>Bonyeza SIMAMISHA ukimaliza safari — eneo lako linafutwa.</li>
+          <li>Eneo linaisha kiotomatiki dakika 2 ukizima data.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <script src="/js/driver.js"></script>
+</body>
+</html>

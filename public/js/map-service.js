@@ -119,17 +119,18 @@ class MapService {
     vehicles.forEach(v => {
       const isBrt = v.transportType === 'brt';
       const bg = isBrt ? '#2563eb' : '#059669';
-      const icon = isBrt ? '🚍' : '🚌';
+      const icon = isBrt ? 'R' : 'B';
       const markerIcon = L.divIcon({
         className: 'live-vehicle-marker',
         html: `<div title="${v.routeSign}" style="background:${bg};color:#fff;min-width:30px;height:30px;padding:0 6px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:15px;border:2px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.4);white-space:nowrap;">${icon}<span style="font-size:10px;font-weight:800;margin-left:3px;">${v.etaToStopMin != null ? v.etaToStopMin + '′' : ''}</span></div>`,
         iconSize: [34, 30],
         iconAnchor: [17, 15]
       });
-      const occ = v.occupancy === 'full' ? '🔴 Imejaa' : v.occupancy === 'seats' ? '🟢 Viti vipo' : '⚪ Tupu';
+      const occ = v.occupancy === 'full' ? 'Imejaa' : v.occupancy === 'seats' ? 'Viti vipo' : v.occupancy === 'empty' ? 'Tupu' : 'Hali haijulikani';
+      const live = v.real ? ' <span style="background:#059669;color:#fff;font-size:9px;font-weight:800;padding:1px 6px;border-radius:8px;">LIVE</span>' : '';
       const m = L.marker(v.coordinates, { icon: markerIcon, zIndexOffset: 500 })
         .addTo(this.map)
-        .bindPopup(`<b>${icon} ${v.routeSign}</b><br><small>→ ${v.destination || ''}</small><br><small>⏱️ ${v.etaToStopMin != null ? 'Dakika ' + v.etaToStopMin + ' hadi kituo' : 'Dakika ' + v.etaToTerminusMin + ' hadi mwisho'}</small><br><small>${occ}</small>`);
+        .bindPopup(`<b>${icon} ${v.routeSign}</b>${live}<br><small>→ ${v.destination || ''}</small><br><small>${v.etaToStopMin != null ? 'Dakika ' + v.etaToStopMin + ' hadi kituo' : 'Dakika ' + v.etaToTerminusMin + ' hadi mwisho'}</small><br><small>${occ}</small>${v.real && v.updatedSecondsAgo != null ? `<br><small style="color:#059669;">sekunde ${v.updatedSecondsAgo} zilizopita</small>` : ''}`);
       this.vehicleMarkers.push(m);
     });
   }

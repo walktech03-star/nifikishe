@@ -1442,6 +1442,36 @@ body {
   .brand-tagline { display: none; }
 }
 
+/* Professional icon/text replacements (no pictograph emoji in production UI) */
+.t-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 22px; height: 22px; padding: 0 6px;
+  background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px;
+  font-size: 11px; font-weight: 800; color: #0f172a;
+}
+.hdr-ic { display: inline-flex; align-items: center; color: #0f172a; }
+.hdr-ic svg { display: block; }
+.live-tag {
+  background: #059669; color: #fff; font-size: 9px; font-weight: 800;
+  padding: 1px 6px; border-radius: 8px; letter-spacing: .4px;
+}
+.veh-marker {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800; color: #fff;
+  border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,.35);
+}
+.veh-marker.bus { background: #059669; }
+.veh-marker.brt { background: #2563eb; }
+.cat-code {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 8px;
+  background: #0f766e; color: #fff; font-size: 12px; font-weight: 800;
+}
+.step-code {
+  font-size: 10px; font-weight: 800; color: #0f172a; letter-spacing: .3px;
+}
+
 @media (max-width: 600px) {
   .features-grid { grid-template-columns: 1fr; }
   .hero-search-inputs { flex-direction: column; }
